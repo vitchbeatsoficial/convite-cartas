@@ -182,6 +182,17 @@ body.solo .row[data-only=solo]{display:flex!important}
 .plist button:focus-visible{outline:2px solid var(--seal)}
 .note.dark{color:#7a6f88}
 @media(max-width:600px){.beat{padding:14px}.playb{width:50px;height:50px}.tl .seg{font-size:11px;padding:0 4px}.plist .tm{font-size:13px}}
+/* baixar beat */
+.beat{position:relative}
+.btitle{padding-right:48px}
+.dl{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--paper);background:rgba(243,234,216,.1);transition:background .2s,transform .2s}
+.dl:hover{background:var(--sak);color:#2a1020;transform:translateY(2px)}
+.dl:focus-visible{outline:2px solid var(--sak);outline-offset:2px}
+.dl svg{width:22px;height:22px}
+.dl[hidden]{display:none}
+.dl-hint{position:absolute;top:-40px;right:30px;display:flex;align-items:flex-start;gap:2px;font:700 22px/1 "Caveat",cursive;color:var(--seal);pointer-events:none;transform:rotate(-3deg)}
+.dl-hint svg{width:42px;height:30px;margin-top:6px}
+.beat:has(.dl[hidden]) .dl-hint{display:none}
 /* escolha de versos */
 .pick-help{font-size:15px!important;color:#3a3246!important;margin:0 0 8px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:#5a5068;margin:0 0 10px}
@@ -374,6 +385,8 @@ body.solo .row[data-only=solo]{display:flex!important}
           <div class="btime"><span id="tNow">0:00</span><span id="bMsg"></span><span id="tDur">0:00</span></div>
         </div>
         <audio id="aud" preload="metadata"></audio>
+        <span class="dl-hint" aria-hidden="true">baixe se quiser<svg viewBox="0 0 60 40"><path d="M4 8 C 26 4, 44 10, 50 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M42 26 L50 32 L54 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <a class="dl" id="dlB" aria-label="Baixar o beat" title="Baixar o beat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
       <h3 class="sub" data-solo="Escolha o seu verso">As partes da música</h3>
       <p class="pick-help" id="pickHelp"></p>
@@ -659,8 +672,13 @@ function drawParts() {
 }
 $("tDur").textContent = fmt(dur);
 $("partsNote").textContent = PROVISORIO ? "Beat, tempos e partes de exemplo: vou trocar pelo beat real da Carta 10." : "";
-if (!BEAT.arquivo) { $("playB").disabled = true; $("bMsg").textContent = "o beat chega em breve"; }
-else aud.src = BEAT.arquivo;
+if (!BEAT.arquivo) { $("playB").disabled = true; $("bMsg").textContent = "o beat chega em breve"; $("dlB").hidden = true; }
+else {
+  aud.src = BEAT.arquivo;
+  const baixar = BEAT.baixar || BEAT.arquivo;
+  $("dlB").href = baixar;
+  $("dlB").setAttribute("download", "Carta 10 - beat." + baixar.split(".").pop());
+}
 aud.addEventListener("loadedmetadata", () => { if (isFinite(aud.duration)) { dur = aud.duration; $("tDur").textContent = fmt(dur); drawParts(); paint(); } });
 aud.addEventListener("error", () => { if (BEAT.arquivo) { $("playB").disabled = true; $("bMsg").textContent = "não consegui carregar o beat"; } });
 function paint() {
