@@ -182,6 +182,24 @@ body.solo .row[data-only=solo]{display:flex!important}
 .plist button:focus-visible{outline:2px solid var(--seal)}
 .note.dark{color:#7a6f88}
 @media(max-width:600px){.beat{padding:14px}.playb{width:50px;height:50px}.tl .seg{font-size:11px;padding:0 4px}.plist .tm{font-size:13px}}
+/* escolha de versos */
+.pick-help{font-size:15px!important;color:#3a3246!important;margin:0 0 8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:#5a5068;margin:0 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.lg-livre{background:#fffaf0;box-shadow:inset 0 0 0 2px var(--seal)}.lg-tomado{background:var(--sak)}
+.lg-fixa,.tl .seg.fixa,.dot.hatch{background:repeating-linear-gradient(45deg,#d6c8ab 0 5px,#c8b996 5px 10px)!important}
+.tl .seg.fixa{color:#6b6078;font-weight:500}
+.tl .seg.livre{background:#fffaf0;color:var(--seal);box-shadow:inset 0 0 0 2px var(--seal)}
+.tl .seg.mine{box-shadow:inset 0 0 0 3px #1f1a2b}
+.plist .st{display:block;font-size:13px;font-weight:400;color:#7a6f88}
+.plist li.mine .st{color:var(--seal);font-weight:700}
+.plist li.fixa .nm{color:#6b6078}
+.plist .acts{display:flex;gap:4px;align-items:center;flex:none}
+.plist .pick{background:var(--seal);color:#fff;border-radius:999px;padding:0 14px;min-height:38px}
+.plist .pick:hover{background:#9a2742}.plist .pick:disabled,.plist .unpick:disabled{opacity:.5}
+.plist .unpick{color:#7a6f88}
+.pick-msg{min-height:1.5em;font-size:15px!important;font-weight:700;color:var(--seal)!important;margin:10px 0 0}
+@media(max-width:600px){.plist li{flex-wrap:wrap}.plist .nm{flex:1 1 60%}.plist .acts{margin-left:auto}}
 /* virar página (dentro da carta) */
 .turn{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px dashed rgba(233,238,248,.18)}
 .sheet .turn{border-top-color:rgba(60,50,80,.22)}
@@ -357,9 +375,12 @@ body.solo .row[data-only=solo]{display:flex!important}
         </div>
         <audio id="aud" preload="metadata"></audio>
       </div>
-      <h3 class="sub">A parte de cada um</h3>
+      <h3 class="sub" data-solo="Escolha o seu verso">As partes da música</h3>
+      <p class="pick-help" id="pickHelp"></p>
+      <div class="legend"><span><i class="lg-livre"></i>verso livre</span><span><i class="lg-tomado"></i>verso escolhido</span><span><i class="lg-fixa"></i>não entra na escolha</span></div>
       <div class="tl" id="tl"><span class="ph" id="ph"></span></div>
       <ul class="plist" id="plist"></ul>
+      <p class="pick-msg" id="pickMsg" role="status" aria-live="polite"></p>
       <p class="note dark" id="partsNote"></p>
       <h3 class="sub" data-solo="Fala comigo">Falem comigo</h3>
       <div class="row" data-only="solo" style="margin-top:0;margin-bottom:12px"><a class="btn wa" id="waYes" target="_blank" rel="noopener">Avisar o Vitch que aceitei</a></div>
@@ -404,15 +425,19 @@ const CONTATOS = [
 ];
 const BEAT = { titulo: "Carta 10", arquivo: "" };   // ex.: "audio/carta10.mp3"
 const PROVISORIO = true;
+// tipo "verso" = pode ser escolhido · "fixa" = intro, refrão, ponte (não entram na escolha)
+// fixo: "vitch" = verso que já é do VitchBeats
 const PARTES = [
-  { quem: "Intro",             inicio: "0:00", fim: "0:15" },
-  { quem: "VitchBeats",        inicio: "0:15", fim: "0:50" },
-  { quem: "Lucas ART",         inicio: "0:50", fim: "1:25" },
-  { quem: "Pedro Alvez",       inicio: "1:25", fim: "2:00" },
-  { quem: "Gabriel Rodrigues", inicio: "2:00", fim: "2:35" },
-  { quem: "VitchBeats",        inicio: "2:35", fim: "3:05", obs: "final" }
+  { id: "intro",        nome: "Intro",        tipo: "fixa",  inicio: "0:00", fim: "0:15" },
+  { id: "verso-1",      nome: "Verso 1",      tipo: "verso", inicio: "0:15", fim: "0:45", fixo: "vitch" },
+  { id: "refrao-1",     nome: "Refrão",       tipo: "fixa",  inicio: "0:45", fim: "1:05" },
+  { id: "verso-2",      nome: "Verso 2",      tipo: "verso", inicio: "1:05", fim: "1:35" },
+  { id: "verso-3",      nome: "Verso 3",      tipo: "verso", inicio: "1:35", fim: "2:05" },
+  { id: "ponte",        nome: "Ponte",        tipo: "fixa",  inicio: "2:05", fim: "2:20" },
+  { id: "verso-4",      nome: "Verso 4",      tipo: "verso", inicio: "2:20", fim: "2:50" },
+  { id: "refrao-final", nome: "Refrão final", tipo: "fixa",  inicio: "2:50", fim: "3:10" }
 ];
-const CORES = { "Intro": "#cbbfa6", "VitchBeats": "#e06a86", "Lucas ART": "#f4a9bd", "Pedro Alvez": "#9dbcf5", "Gabriel Rodrigues": "#f2cf7e" };
+const COR_PESSOA = { vitch: "#e06a86", lucas: "#f4a9bd", pedro: "#9dbcf5", gabriel: "#f2cf7e" };
 const CARTAS = [
   { numero: 6, feat: "Avellarzin, Firee, TakaB e Anny", thumb: "img/carta6.jpg", link: "https://www.youtube.com/watch?v=Q9g89-Q9ieU" },
   { numero: 8, feat: "Alice e JRP", thumb: "img/carta8.jpg", link: "https://www.youtube.com/watch?v=Ksf8FENKZ-k" },
@@ -575,7 +600,7 @@ function setEnvText(thanks) {
   document.querySelector(".env-wrap .hint").textContent = thanks ? "obrigado pelo seu tempo" : ENV_HINT;
   document.querySelector(".env-wrap .kick").textContent = thanks ? "a carta foi guardada…" : KICK0;
 }
-$("accept").addEventListener("click", () => { show(ACEITE); setTimeout(burst, 700); });
+$("accept").addEventListener("click", () => { show(ACEITE); setTimeout(burst, 700); carregar(); });
 $("later").addEventListener("click", () => show(RECUSA));
 $("sealIt").addEventListener("click", () => { setEnvText(true); show(0); });
 
@@ -596,19 +621,44 @@ const NB = 64; let seed = 7;
 const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
 wave.innerHTML = Array.from({ length: NB }, (_, k) => `<i style="height:${Math.round(22 + 78 * Math.abs(Math.sin(k / 4.2)) * (.45 + rnd() * .55))}%"></i>`).join("");
 const bars = [...wave.children];
+
+const API = "/api/escolhas";
+const MEU = EU ? Object.keys(PESSOAS).find(k => PESSOAS[k] === EU) : null;
+let ESC = {}, syncOK = false, saving = false;
+const quemNome = k => k === "vitch" ? "VitchBeats" : (PESSOAS[k] ? PESSOAS[k].nome : "");
+const donoDe = p => p.tipo !== "verso" ? "" : (p.fixo || (PESSOAS[ESC[p.id]] ? ESC[p.id] : ""));
+const meuVerso = () => PARTES.find(p => p.tipo === "verso" && !p.fixo && ESC[p.id] === MEU && MEU);
+
 function drawParts() {
   $("tl").innerHTML = '<span class="ph" id="ph"></span>' + PARTES.map((p, k) => {
-    const a = toS(p.inicio), b = toS(p.fim);
-    const mc = EU ? (p.quem === EU.nome ? " mine" : " dim") : "";
-    return `<button class="seg${mc}" type="button" data-k="${k}" style="left:${a / dur * 100}%;width:${(b - a) / dur * 100}%;background:${esc(cor(p.quem))}" title="${esc(p.quem)} · ${esc(p.inicio)}–${esc(p.fim)}">${esc(p.quem)}</button>`;
+    const a = toS(p.inicio), b = toS(p.fim), d = donoDe(p);
+    const cls = p.tipo !== "verso" ? "fixa" : d ? "tomada" : "livre";
+    const lbl = p.tipo !== "verso" ? p.nome : d ? quemNome(d) : p.nome;
+    const bg = cls === "tomada" ? `background:${COR_PESSOA[d]};` : "";
+    return `<button class="seg ${cls}${d && d === MEU ? " mine" : ""}" type="button" data-k="${k}" style="left:${a / dur * 100}%;width:${(b - a) / dur * 100}%;${bg}" title="${esc(p.nome)} · ${esc(p.inicio)}–${esc(p.fim)}">${esc(lbl)}</button>`;
   }).join("");
-  $("plist").innerHTML = PARTES.map((p, k) =>
-    `<li data-k="${k}"${EU && p.quem === EU.nome ? ' class="mine"' : ""}><span class="dot" style="background:${esc(cor(p.quem))}"></span><span class="nm">${esc(p.quem)}${p.obs ? ` <small style="font-weight:400;color:#7a6f88">· ${esc(p.obs)}</small>` : ""}</span><span class="tm">${esc(p.inicio)} – ${esc(p.fim)}</span><button type="button" data-k="${k}">ouvir</button></li>`).join("");
+  $("plist").innerHTML = PARTES.map((p, k) => {
+    const d = donoDe(p), fixa = p.tipo !== "verso";
+    const st = fixa ? "não entra na escolha" : d ? (d === MEU ? "você escolheu esse" : "escolhido por " + quemNome(d)) : "livre";
+    let acao = "";
+    if (!fixa && !p.fixo && MEU && syncOK) {
+      if (!d) acao = `<button type="button" class="pick" data-a="escolher" data-k="${k}"${saving ? " disabled" : ""}>escolher</button>`;
+      else if (d === MEU) acao = `<button type="button" class="unpick" data-a="liberar" data-k="${k}"${saving ? " disabled" : ""}>liberar</button>`;
+    }
+    const dot = fixa ? "" : d ? `background:${COR_PESSOA[d]}` : "background:#fffaf0;box-shadow:inset 0 0 0 2px var(--seal)";
+    return `<li data-k="${k}" class="${fixa ? "fixa" : ""}${d && d === MEU ? " mine" : ""}"><span class="dot${fixa ? " hatch" : ""}" style="${dot}"></span><span class="nm">${esc(p.nome)}<small class="st">${esc(st)}</small></span><span class="tm">${esc(p.inicio)} – ${esc(p.fim)}</span><span class="acts"><button type="button" data-a="ouvir" data-k="${k}">ouvir</button>${acao}</span></li>`;
+  }).join("");
+  const mv = meuVerso();
+  $("pickHelp").textContent = MEU
+    ? (syncOK ? (mv ? `Você escolheu o ${mv.nome}. Se quiser trocar, é só escolher outro verso livre.` : "Ouça o beat e escolha um verso livre. Intro, refrões e ponte não entram na escolha: só os versos.") : "Só os versos podem ser escolhidos. Intro, refrões e ponte não entram na escolha. A escolha abre pelo seu link do convite.")
+    : "Cada convidado escolhe um verso pelo próprio link. Intro, refrões e ponte não entram na escolha: só os versos.";
+  if (EU) {
+    const extra = mv ? ` Escolhi o ${mv.nome}.` : "";
+    $("waYes").href = `https://wa.me/${WHATS}?text=${encodeURIComponent(`Oi Vitch! Aceito o convite para a Carta 10 do projeto Cartas.${extra} — ${EU.nome}`)}`;
+  }
 }
-function cor(q) { return CORES[q] || "#cbbfa6"; }
-drawParts();
 $("tDur").textContent = fmt(dur);
-$("partsNote").textContent = PROVISORIO ? "Tempos de exemplo: vou trocar pelos tempos reais da música." : "";
+$("partsNote").textContent = PROVISORIO ? "Tempos e partes de exemplo: vou trocar pelos tempos reais da música." : "";
 if (!BEAT.arquivo) { $("playB").disabled = true; $("bMsg").textContent = "o beat chega em breve"; }
 else aud.src = BEAT.arquivo;
 aud.addEventListener("loadedmetadata", () => { if (isFinite(aud.duration)) { dur = aud.duration; $("tDur").textContent = fmt(dur); drawParts(); paint(); } });
@@ -629,7 +679,38 @@ function seek(sec, play) { if (!BEAT.arquivo) return; aud.currentTime = Math.min
 wave.addEventListener("click", e => { const r = wave.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * dur, false); });
 wave.addEventListener("keydown", e => { if (e.key === "ArrowRight") { e.stopPropagation(); seek(aud.currentTime + 5); } if (e.key === "ArrowLeft") { e.stopPropagation(); seek(aud.currentTime - 5); } });
 $("tl").addEventListener("click", e => { const b = e.target.closest(".seg"); if (b) seek(toS(PARTES[+b.dataset.k].inicio), true); });
-$("plist").addEventListener("click", e => { const b = e.target.closest("button"); if (b) seek(toS(PARTES[+b.dataset.k].inicio), true); });
+
+function limpa(o) { const r = {}; for (const [k, v] of Object.entries(o || {})) if (PESSOAS[v]) r[k] = v; return r; }
+async function carregar() {
+  try {
+    const r = await fetch(API, { cache: "no-store" });
+    if (!r.ok) throw 0;
+    ESC = limpa((await r.json()).escolhas); syncOK = true;
+  } catch (e) { syncOK = false; }
+  drawParts(); paint();
+}
+async function agir(acao, p) {
+  if (!MEU || saving) return;
+  saving = true; drawParts();
+  $("pickMsg").textContent = acao === "escolher" ? "Salvando a sua escolha…" : "Liberando o verso…";
+  try {
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pessoa: MEU, parte: p.id, acao }) });
+    const j = await r.json().catch(() => ({}));
+    if (j.escolhas) ESC = limpa(j.escolhas);
+    if (r.status === 409) $("pickMsg").textContent = `Poxa, o ${p.nome} acabou de ser escolhido por ${quemNome(ESC[p.id])}. Escolha outro verso livre.`;
+    else if (!r.ok) $("pickMsg").textContent = "Não consegui salvar agora. Tenta de novo em instantes.";
+    else $("pickMsg").textContent = acao === "escolher" ? `Pronto! O ${p.nome} é seu.` : `O ${p.nome} voltou a ficar livre.`;
+  } catch (e) { $("pickMsg").textContent = "Sem conexão agora. Tenta de novo em instantes."; }
+  saving = false; drawParts(); paint();
+}
+$("plist").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const p = PARTES[+b.dataset.k];
+  if (b.dataset.a === "ouvir") seek(toS(p.inicio), true);
+  else agir(b.dataset.a, p);
+});
+drawParts(); carregar();
+setInterval(() => { if (scenes[ACEITE].classList.contains("on") && !document.hidden && !saving) carregar(); }, 8000);
 
 /* ---- chuva e pétalas ---- */
 const cv = $("sky"), ctx = cv.getContext("2d");
