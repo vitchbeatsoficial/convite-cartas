@@ -1,6 +1,7 @@
 // Guarda quais versos da Carta 10 cada convidado escolheu.
 // Usa o banco Upstash (Redis) conectado ao projeto na Vercel.
 const KEY = "carta10:escolhas";
+const RESP = "carta10:respostas";   // pessoa -> "aceitou|data" ou "recusou|data"
 const PESSOAS = ["lucas", "pedro", "gabriel"];
 const VERSO = /^verso-\d{1,2}$/;
 const FIXOS = ["verso-1"]; // versos que já têm dono (VitchBeats) e não podem ser escolhidos
@@ -19,22 +20,41 @@ async function redis(cmd) {
   return j.result;
 }
 
-async function todas() {
-  const arr = (await redis(["HGETALL", KEY])) || [];
+async function hash(k) {
+  const arr = (await redis(["HGETALL", k])) || [];
   const o = {};
   for (let i = 0; i < arr.length; i += 2) o[arr[i]] = arr[i + 1];
   return o;
 }
+const todas = () => hash(KEY);
+async function respostas() {
+  const r = await hash(RESP), o = {};
+  for (const [p, v] of Object.entries(r)) { const [res, t] = String(v).split("|"); o[p] = { resposta: res, quando: t }; }
+  return o;
+}
+async function tudo() { return { escolhas: await todas(), respostas: await respostas() }; }
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   try {
-    if (req.method === "GET") return res.status(200).json({ escolhas: await todas() });
+    if (req.method === "GET") return res.status(200).json(await tudo());
     if (req.method !== "POST") return res.status(405).json({ erro: "método não permitido" });
 
     let body = req.body;
     if (typeof body === "string") body = JSON.parse(body || "{}");
     const { pessoa, parte, acao } = body || {};
+    const agora = new Date().toISOString();
+    if (acao === "zerar") {
+      await redis(["DEL", KEY]); await redis(["DEL", RESP]);
+      return res.status(200).json(await tudo());
+    }
+    if (PESSOAS.includes(pessoa) && ["aceitar", "recusar"].includes(acao)) {
+      await redis(["HSET", RESP, pessoa, (acao === "aceitar" ? "aceitou" : "recusou") + "|" + agora]);
+      if (acao === "recusar") { // quem recusa libera o verso que tinha escolhido
+        for (const [p, q] of Object.entries(await todas())) if (q === pessoa) await redis(["HDEL", KEY, p]);
+      }
+      return res.status(200).json(await tudo());
+    }
     if (!PESSOAS.includes(pessoa) || !VERSO.test(parte || "") || FIXOS.includes(parte)) {
       return res.status(400).json({ erro: "dados inválidos" });
     }
@@ -43,6 +63,7 @@ module.exports = async (req, res) => {
       const ok = await redis(["HSETNX", KEY, parte, pessoa]);
       let esc = await todas();
       if (!ok && esc[parte] !== pessoa) return res.status(409).json({ erro: "verso ocupado", escolhas: esc });
+      await redis(["HSET", RESP, pessoa, "aceitou|" + agora]);
       // cada convidado fica com um verso só: libera o anterior
       for (const [p, q] of Object.entries(esc)) if (q === pessoa && p !== parte) await redis(["HDEL", KEY, p]);
       esc = await todas();

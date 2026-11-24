@@ -613,8 +613,12 @@ function setEnvText(thanks) {
   document.querySelector(".env-wrap .hint").textContent = thanks ? "obrigado pelo seu tempo" : ENV_HINT;
   document.querySelector(".env-wrap .kick").textContent = thanks ? "a carta foi guardada…" : KICK0;
 }
-$("accept").addEventListener("click", () => { show(ACEITE); setTimeout(burst, 700); carregar(); });
-$("later").addEventListener("click", () => show(RECUSA));
+function avisar(acao) {
+  if (!MEU) return;
+  try { fetch(API, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pessoa: MEU, acao }) }).catch(() => {}); } catch (e) {}
+}
+$("accept").addEventListener("click", () => { avisar("aceitar"); show(ACEITE); setTimeout(burst, 700); carregar(); });
+$("later").addEventListener("click", () => { avisar("recusar"); show(RECUSA); });
 $("sealIt").addEventListener("click", () => { setEnvText(true); show(0); });
 
 /* ---- prazo ---- */
