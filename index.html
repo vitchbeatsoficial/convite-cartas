@@ -215,6 +215,20 @@ body.solo .row[data-only=solo]{display:flex!important}
 .plist .unpick{color:#7a6f88}
 .pick-msg{min-height:1.5em;font-size:15px!important;font-weight:700;color:var(--seal)!important;margin:10px 0 0}
 @media(max-width:600px){.plist li{flex-wrap:wrap}.plist .nm{flex:1 1 60%}.plist .acts{margin-left:auto}}
+/* quem está respondendo */
+.quem{position:fixed;inset:0;z-index:12;display:grid;place-items:center;padding:20px;background:rgba(5,8,18,.75);backdrop-filter:blur(6px);animation:fadeIn .3s both}
+.quem[hidden]{display:none}
+.quem-box{width:min(420px,100%);background:linear-gradient(175deg,var(--paper),var(--paper2));color:#2a2433;border-radius:8px;padding:28px 24px 18px;box-shadow:0 40px 80px -20px rgba(0,0,0,.9);text-align:center;animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
+.quem-box .kick{color:var(--seal);margin:0}
+.quem-box h3{font:800 clamp(24px,5vw,30px)/1.15 "Shippori Mincho",serif;margin:4px 0 6px;color:#1f1a2b;text-wrap:balance}
+.quem-sub{color:#6b6078;font-size:15px;margin:0 auto 18px}
+.quem-opts{display:grid;gap:10px}
+.quem-opts button{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 18px;border:0;border-radius:12px;background:#fffaf0;color:#1f1a2b;font:700 17px "Zen Kaku Gothic New",sans-serif;cursor:pointer;box-shadow:0 6px 16px -10px rgba(0,0,0,.5);transition:transform .15s,box-shadow .15s}
+.quem-opts button:hover{transform:translateY(-2px);box-shadow:0 10px 20px -10px rgba(0,0,0,.6)}
+.quem-opts button:focus-visible{outline:3px solid var(--seal);outline-offset:2px}
+.qd{width:16px;height:16px;border-radius:50%;flex:none}
+.quem-x{margin-top:12px;border:0;background:none;color:#7a6f88;font:500 15px "Zen Kaku Gothic New",sans-serif;min-height:44px;padding:0 12px;cursor:pointer}
+.quem-x:hover{color:#2a2433}
 /* atalhos depois de responder */
 .atalhos{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:8;display:flex;gap:4px;padding:5px;border-radius:999px;background:rgba(12,20,38,.78);backdrop-filter:blur(8px);box-shadow:0 10px 30px -10px rgba(0,0,0,.7);max-width:calc(100% - 20px);overflow-x:auto;scrollbar-width:none;animation:fadeIn .5s both}
 .atalhos::-webkit-scrollbar{display:none}
@@ -436,6 +450,16 @@ body.respondeu main{padding-top:72px}
 
 </main>
 
+<div class="quem" id="quem" role="dialog" aria-modal="true" aria-labelledby="quemT" hidden>
+  <div class="quem-box">
+    <p class="kick">antes de continuar…</p>
+    <h3 id="quemT"></h3>
+    <p class="quem-sub">Assim eu fico sabendo quem respondeu.</p>
+    <div class="quem-opts" id="quemOpts"></div>
+    <button type="button" class="quem-x" id="quemX">cancelar</button>
+  </div>
+</div>
+
 <nav class="atalhos" id="atalhos" aria-label="Atalhos do convite" hidden></nav>
 
 <div class="player" id="player" role="dialog" aria-modal="true" aria-label="Assistir a carta">
@@ -486,10 +510,11 @@ const PESSOAS = {
   gabriel: { nome: "Gabriel Rodrigues", primeiro: "Gabriel" }
 };
 const WHATS = "5591984385735";
-const EU = PESSOAS[(location.hash || "").slice(1).toLowerCase()] || null;
+let EU = PESSOAS[(location.hash || "").slice(1).toLowerCase()] || null;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = id => document.getElementById(id);
-if (EU) {
+function personalizar() {
+  if (!EU) return;
   document.body.classList.add("solo");
   const outros = Object.values(PESSOAS).filter(p => p !== EU).map(p => p.nome).join(" e ");
   document.querySelectorAll("[data-solo]").forEach(el => {
@@ -502,7 +527,8 @@ if (EU) {
   $("waYes").href = wa(`Oi Vitch! Aceito o convite para a Carta 10 do projeto Cartas. — ${EU.nome}`);
   $("waNo").href = wa(`Oi Vitch! Li o convite da Carta 10, obrigado pelo carinho. Dessa vez não vou conseguir participar. — ${EU.nome}`);
 }
-const KICK0 = document.querySelector(".env-wrap .kick").textContent;
+personalizar();
+let KICK0 = document.querySelector(".env-wrap .kick").textContent;
 
 const ytId = u => (String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/) || [])[1] || "";
 $("letters").innerHTML = CARTAS.map((c, i) =>
@@ -625,6 +651,7 @@ $("letters").addEventListener("click", e => {
 $("pClose").addEventListener("click", closePlayer);
 $("player").addEventListener("click", e => { if (e.target.id === "player") closePlayer(); });
 document.addEventListener("keydown", e => {
+  if (!$("quem").hidden) { if (e.key === "Escape") fecharQuem(); return; }
   if ($("player").classList.contains("on")) { if (e.key === "Escape") closePlayer(); return; }
   if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
   if (e.key === "ArrowLeft") prev();
@@ -640,11 +667,45 @@ function avisar(acao) {
   if (!MEU) return;
   try { fetch(API, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pessoa: MEU, acao }) }).catch(() => {}); } catch (e) {}
 }
-$("accept").addEventListener("click", () => { avisar("aceitar"); marcarResposta("aceitou"); show(ACEITE); setTimeout(burst, 700); carregar(); });
-$("later").addEventListener("click", () => { avisar("recusar"); marcarResposta("recusou"); show(RECUSA); });
+function responder(acao) {
+  if (acao === "aceitar") { avisar("aceitar"); marcarResposta("aceitou"); show(ACEITE); setTimeout(burst, 700); carregar(); }
+  else { avisar("recusar"); marcarResposta("recusou"); show(RECUSA); }
+}
+$("accept").addEventListener("click", () => EU ? responder("aceitar") : perguntarQuem("aceitar"));
+$("later").addEventListener("click", () => EU ? responder("recusar") : perguntarQuem("recusar"));
+
+/* ---- link principal: perguntar quem está respondendo ---- */
+let acaoPendente = null, focoAntes = null;
+function perguntarQuem(acao) {
+  acaoPendente = acao; focoAntes = document.activeElement;
+  $("quemT").textContent = acao === "aceitar" ? "Quem está aceitando o convite?" : "Quem está respondendo?";
+  $("quemOpts").innerHTML = Object.entries(PESSOAS).map(([k, p]) =>
+    `<button type="button" data-k="${k}"><span class="qd" style="background:${COR_PESSOA[k]}"></span>${esc(p.nome)}</button>`).join("");
+  $("quem").hidden = false;
+  $("quemOpts").firstElementChild.focus();
+}
+function fecharQuem() { $("quem").hidden = true; acaoPendente = null; if (focoAntes) focoAntes.focus(); }
+function virarPessoa(k) {
+  EU = PESSOAS[k]; MEU = k;
+  try { history.replaceState(null, "", "#" + k); } catch (e) { location.hash = k; }
+  personalizar();
+  KICK0 = document.querySelector(".env-wrap .kick").textContent;
+  CHAVE = "cartas10:" + k;
+  try { RESPOSTA = localStorage.getItem(CHAVE); } catch (e) { RESPOSTA = null; }
+  drawParts();
+}
+$("quemOpts").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const acao = acaoPendente;
+  $("quem").hidden = true; acaoPendente = null;
+  virarPessoa(b.dataset.k);
+  responder(acao);
+});
+$("quemX").addEventListener("click", fecharQuem);
+$("quem").addEventListener("click", e => { if (e.target.id === "quem") fecharQuem(); });
 
 /* ---- atalhos depois de responder ---- */
-const CHAVE = "cartas10:" + (EU ? EU.primeiro.toLowerCase() : "grupo");
+let CHAVE = "cartas10:" + (EU ? EU.primeiro.toLowerCase() : "grupo");
 let RESPOSTA = null;
 try { RESPOSTA = localStorage.getItem(CHAVE); } catch (e) {}
 const alvoResposta = () => RESPOSTA === "recusou" ? RECUSA : ACEITE;
@@ -690,7 +751,7 @@ wave.innerHTML = Array.from({ length: NB }, (_, k) => `<i style="height:${Math.r
 const bars = [...wave.children];
 
 const API = "/api/escolhas";
-const MEU = EU ? Object.keys(PESSOAS).find(k => PESSOAS[k] === EU) : null;
+let MEU = EU ? Object.keys(PESSOAS).find(k => PESSOAS[k] === EU) : null;
 let ESC = {}, syncOK = false, saving = false;
 const quemNome = k => k === "vitch" ? "VitchBeats" : (PESSOAS[k] ? PESSOAS[k].nome : "");
 const donoDe = p => p.tipo !== "verso" ? "" : (p.fixo || (PESSOAS[ESC[p.id]] ? ESC[p.id] : ""));
