@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projeto Cartas — Convite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Caveat:wght@500;700&family=Kalam:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: terno, melancólico, íntimo — como uma cena de despedida em anime numa noite de chuva.
+   IDEA: a página se comporta como uma carta selada que vai sendo desdobrada, folha por folha.
+   PICTURE: chuva caindo sobre uma noite azul-profunda, pétalas soltas, um envelope com selo de cera.
+   COLOUR and TYPE: azul-noite dominante, papel envelhecido de apoio, rosa-sakura como acento; Shippori Mincho + Caveat (letra de mão) + Zen Kaku Gothic.
+   LAYOUT: uma folha centralizada por tela, que aparece a cada clique; pontos de progresso embaixo. */
+:root{color-scheme:dark;--bg:#0c1426;--bg2:#16223d;--paper:#f3ead8;--paper2:#e6d8bc;--ink:#e9eef8;--soft:#9fb0cf;--sak:#f4a9bd;--seal:#b3324e;--pink:#ffd3de;--line:rgba(233,238,248,.14)}
+:root[data-theme=light],:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(120% 80% at 50% 110%,#2a3a63 0%,var(--bg2) 35%,var(--bg) 75%);background-attachment:fixed;color:var(--ink);font:16px/1.6 "Zen Kaku Gothic New",system-ui,sans-serif;overflow-x:clip;min-height:100%}
+#sky{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.moon{position:fixed;top:7vh;right:9vw;width:clamp(70px,12vw,140px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 38%,#fff8ea,#e9dcc0 55%,#c8b994);box-shadow:0 0 60px 18px rgba(244,230,200,.16),0 0 160px 60px rgba(160,180,230,.08);opacity:.85;z-index:0}
+.city{position:fixed;left:0;right:0;bottom:0;height:22vh;z-index:0;pointer-events:none}
+main{position:relative;z-index:2;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:32px 16px 48px}
+main{perspective:2000px}
+.scene{grid-area:1/1;width:min(680px,100%);display:none;transform-origin:left center;backface-visibility:hidden;-webkit-backface-visibility:hidden;align-self:center}
+.scene.on{display:block}
+.scene.first{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+.scene.flip-out{z-index:3;pointer-events:none;animation:flipOut .9s cubic-bezier(.6,.05,.3,1) forwards}
+.scene.flip-in{z-index:3;pointer-events:none;animation:flipIn .9s cubic-bezier(.6,.05,.3,1) both}
+.scene.under{z-index:1;animation:under .9s ease both}
+.scene.sink{z-index:1;pointer-events:none;animation:sink .9s ease forwards}
+@keyframes flipOut{0%{transform:rotateY(0) translateZ(0);filter:brightness(1)}35%{transform:rotateY(-35deg) translateZ(40px) skewY(-1.5deg);filter:brightness(1.08)}100%{transform:rotateY(-180deg) translateZ(0);filter:brightness(.55)}}
+@keyframes flipIn{0%{transform:rotateY(-180deg);filter:brightness(.55)}65%{transform:rotateY(-35deg) translateZ(40px) skewY(-1.5deg);filter:brightness(1.08)}100%{transform:rotateY(0);filter:brightness(1)}}
+@keyframes under{0%{transform:scale(.96);filter:brightness(.45)}100%{transform:none;filter:none}}
+@keyframes sink{0%{transform:none;filter:none}100%{transform:scale(.96);filter:brightness(.45)}}
+@keyframes rise{from{opacity:0;transform:translateY(18px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.reveal>*{opacity:0;transform:translateY(10px);transition:opacity .8s ease,transform .8s ease}
+.reveal>*.in{opacity:1;transform:none}
+h1,h2{font-family:"Shippori Mincho",serif;font-weight:800;line-height:1.08;text-wrap:balance;margin:0 0 .4em}
+h1{font-size:clamp(34px,6vw,52px)}
+h2{font-size:clamp(30px,5vw,44px)}
+.kick{font-family:"Caveat",cursive;font-size:24px;color:var(--sak);margin:0 0 6px}
+p{margin:0 0 1em;max-width:62ch}
+.muted{color:var(--soft)}
+/* envelope */
+.env-wrap{display:grid;justify-items:center;text-align:center;gap:22px}
+.env-wrap .kick,.env-wrap .hint{transition:opacity .4s}
+.env-wrap.opening .kick,.env-wrap.opening .hint{opacity:0!important}
+.env{position:relative;width:min(420px,86vw);aspect-ratio:1.55;cursor:pointer;border:0;padding:0;background:none;margin-top:clamp(40px,10vw,90px);transition:transform .4s;perspective:900px;filter:drop-shadow(0 30px 30px rgba(0,0,0,.55))}
+.env:not(.open):hover,.env:not(.open):focus-visible{transform:translateY(-4px) rotate(-1deg)}
+.env:focus-visible{outline:3px solid var(--sak);outline-offset:6px;border-radius:6px}
+.env>span{position:absolute;display:block}
+.env .back{inset:0;border-radius:6px;background:linear-gradient(170deg,#d9c9a8,#cbb994);z-index:1}
+.env .letter-in{left:6%;right:6%;top:5%;bottom:8%;z-index:2;border-radius:3px;background:repeating-linear-gradient(transparent 0 15px,rgba(80,90,140,.16) 15px 16px),linear-gradient(175deg,#fbf6ea,#efe5cf);padding:12% 9% 0;text-align:left;font:700 clamp(16px,3vw,22px)/1 "Caveat",cursive;color:#4a3d5c;transition:transform .6s cubic-bezier(.3,.7,.3,1) 0s}
+.env .front{inset:0;z-index:3;border-radius:6px;background:linear-gradient(170deg,var(--paper),var(--paper2));clip-path:polygon(0 0,50% 56%,100% 0,100% 100%,0 100%)}
+.env .front svg{position:absolute;inset:0;width:100%;height:100%}
+.env .flap{left:0;right:0;top:0;height:60%;z-index:4;transform-origin:top center;background:linear-gradient(180deg,#efe3c8,#e2d2b0);clip-path:polygon(0 0,100% 0,50% 100%);transition:transform .55s cubic-bezier(.5,0,.3,1) .5s,z-index 0s linear .78s}
+.env .to{left:8%;bottom:10%;z-index:5;font-family:"Caveat",cursive;font-size:clamp(18px,3.4vw,24px);color:#3a3246;text-align:left;line-height:1.15}
+.seal{left:50%;top:52%;width:22%;aspect-ratio:1;z-index:6;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#d65a73,var(--seal) 60%,#7a1e33);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),0 4px 10px rgba(0,0,0,.35);display:grid!important;place-items:center;font-family:"Shippori Mincho",serif;font-weight:800;color:#ffdbe3;font-size:clamp(22px,4.5vw,34px);transition:transform .4s cubic-bezier(.3,1.6,.5,1) 1s,opacity .3s 1s}
+.env.open .seal{transform:translate(-50%,-50%) scale(.2) rotate(40deg);opacity:0;transition-delay:0s,0s;transition-timing-function:ease-in}
+.env.open .flap{transform:rotateX(180deg);z-index:1;transition-delay:.2s,.47s}
+.env.open .letter-in{transform:translateY(-62%);transition:transform .6s cubic-bezier(.3,.7,.3,1) .7s}
+.env.instant,.env.instant *{transition:none!important}
+.env-leave{animation:envLeave .5s ease-in forwards;pointer-events:none}
+@keyframes envLeave{to{opacity:0;transform:translateY(40px) scale(.9)}}
+.sheet-sink{animation:sheetSink .5s ease-in forwards;pointer-events:none}
+@keyframes sheetSink{to{opacity:0;transform:translateY(80px) scale(.6)}}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),0 0 0 10px rgba(244,169,189,.15)}}
+/* folha de papel */
+.sheet{position:relative;background:linear-gradient(175deg,var(--paper),var(--paper2));color:#2a2433;border-radius:4px;padding:clamp(28px,5vw,52px) clamp(22px,5vw,56px);box-shadow:0 40px 80px -30px rgba(0,0,0,.8);background-image:linear-gradient(175deg,var(--paper),var(--paper2)),repeating-linear-gradient(transparent 0 33px,rgba(80,70,110,.12) 33px 34px)}
+.sheet::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(transparent 0 33px,rgba(80,90,140,.13) 33px 34px);border-radius:inherit;pointer-events:none;mask:linear-gradient(transparent 70px,#000 70px)}
+.sheet h2{color:#1f1a2b}
+.sheet .kick{color:var(--seal)}
+.sheet p{color:#3a3246;font-size:17px}
+.hand{font-family:"Kalam",cursive;font-size:clamp(18px,2.6vw,21px);line-height:1.7;color:#221c33;letter-spacing:.005em}
+.tape{position:absolute;top:-12px;left:50%;width:110px;height:26px;transform:translateX(-50%) rotate(-3deg);background:rgba(244,169,189,.55);box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.names{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px}
+.names span{background:#2a2433;color:var(--paper);padding:6px 14px;border-radius:999px;font-weight:700;font-size:15px}
+.pill{display:inline-block;font-size:14px;color:var(--soft);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+/* cartas */
+.letters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:16px;margin-top:22px}
+.letter{position:relative;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:#2a2433;background:linear-gradient(170deg,var(--paper),var(--paper2));border-radius:4px;padding:10px 10px 16px;box-shadow:0 18px 30px -16px rgba(0,0,0,.75);transition:transform .3s,box-shadow .3s;min-height:170px}
+.letter:nth-child(odd){transform:rotate(-1.2deg)}.letter:nth-child(even){transform:rotate(1deg)}
+.letter:hover,.letter:focus-visible{transform:translateY(-6px) rotate(0);box-shadow:0 26px 40px -16px rgba(0,0,0,.85)}
+.letter:focus-visible{outline:3px solid var(--sak);outline-offset:4px}
+.letter .thumb{display:block;aspect-ratio:16/9;border-radius:2px;overflow:hidden;background:#1a2440;margin-bottom:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.letter .thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.9);transition:transform .5s}
+.letter:hover .thumb img{transform:scale(1.05)}
+.letter>span:not(.thumb){padding-inline:6px}
+.contacts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:8px}
+.ct{display:inline-flex;flex-direction:column;align-items:center;min-height:44px;justify-content:center;padding:8px 16px;border-radius:10px;background:#2a2433;color:var(--paper);text-decoration:none;font-weight:700;font-size:15px;white-space:nowrap}
+.ct b{font-size:12px;font-weight:500;color:var(--sak)}
+a.ct:hover{background:#3a3150}
+.letter .n{font-family:"Shippori Mincho",serif;font-weight:800;color:var(--seal);font-size:14px}
+.letter .who{font-family:"Caveat",cursive;font-size:30px;line-height:1.05;color:#1f1a2b}
+.letter .from{font-size:14px;color:#5a5068}
+.letter .play{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--seal)}
+.letter .play i{width:26px;height:26px;border-radius:50%;background:var(--seal);display:grid;place-items:center}
+.letter .play i::after{content:"";border-left:8px solid #fff;border-block:5px solid transparent;margin-left:2px}
+.note{font-size:13px;color:var(--soft);margin-top:14px}
+/* botões */
+.btn{font:700 16px "Zen Kaku Gothic New",sans-serif;min-height:48px;padding:0 26px;border-radius:999px;border:0;cursor:pointer;background:var(--sak);color:#2a1020;box-shadow:0 10px 24px -10px rgba(244,169,189,.7);transition:transform .2s,background .2s}
+.btn:hover{transform:translateY(-2px);background:var(--pink)}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.ghost:hover{background:rgba(255,255,255,.06)}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px;align-items:center}
+.sign{font-family:"Caveat",cursive;font-weight:700;font-size:36px;color:var(--seal);margin-top:10px;text-align:right}
+/* resposta */
+.reply{display:none;text-align:center;margin-top:24px;padding:22px;border-radius:12px;background:rgba(179,50,78,.08);border:1px dashed rgba(179,50,78,.35)}
+.reply.on{display:block;animation:rise .8s both}
+.reply .big{font-family:"Shippori Mincho",serif;font-weight:800;font-size:clamp(24px,4vw,32px);color:#1f1a2b;line-height:1.15;margin-bottom:6px}
+/* player */
+.player{position:fixed;inset:0;z-index:10;display:none;place-items:center;padding:20px;background:rgba(5,8,18,.82);backdrop-filter:blur(6px)}
+.player.on{display:grid;animation:fadeIn .35s ease both}
+@keyframes fadeIn{from{opacity:0}}
+.player .frame{width:min(960px,100%);background:linear-gradient(175deg,var(--paper),var(--paper2));padding:clamp(10px,2vw,16px) clamp(10px,2vw,16px) 14px;border-radius:6px;box-shadow:0 40px 90px -20px rgba(0,0,0,.9);animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+.player .vid{position:relative;aspect-ratio:16/9;background:#000;border-radius:3px;overflow:hidden}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.player .cap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin-top:12px;color:#2a2433}
+.player .cap b{font:700 28px/1 "Caveat",cursive;color:#1f1a2b}
+.player .cap small{color:#5a5068;font-size:14px}
+.player .cap a{color:var(--seal);font-weight:700;font-size:14px}
+.player .x{font:700 22px/1 "Caveat",cursive;color:var(--seal);background:none;border:0;cursor:pointer;min-height:44px;padding:0 8px}
+.player .x:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+/* virar página (dentro da carta) */
+.turn{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px dashed rgba(233,238,248,.18)}
+.sheet .turn{border-top-color:rgba(60,50,80,.22)}
+.turn button{font:700 clamp(21px,3vw,25px)/1 "Caveat",cursive;background:none;border:0;cursor:pointer;color:var(--sak);min-height:44px;padding:6px 4px;display:inline-flex;align-items:center;gap:10px;border-radius:8px}
+.sheet .turn button{color:var(--seal)}
+.turn .back{font-weight:500;opacity:.65;font-size:clamp(18px,2.6vw,21px)}
+.turn .back:hover{opacity:1}
+.turn .go{margin-left:auto}
+.turn .go svg{width:42px;height:42px;flex:none;transition:transform .35s}
+.turn .go:hover svg{transform:rotate(-8deg) translate(3px,-3px)}
+.turn .go:hover span{text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+.turn button:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.turn .pg{font:500 15px "Zen Kaku Gothic New",sans-serif;color:var(--soft);white-space:nowrap}
+.sheet .turn .pg{color:#7a6f88}
+.turn .go .curl{animation:nudge 2.2s ease-in-out infinite;transform-origin:100% 100%}
+@keyframes nudge{50%{transform:scale(1.12)}}
+.hint{font-family:"Caveat",cursive;font-size:22px;color:var(--soft);animation:blink 2.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.4}}
+@media(max-width:600px){main{padding-top:40px}.sheet p{font-size:16px}.moon{top:4vh;right:6vw}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal>*{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="moon" aria-hidden="true"></div>
+<svg class="city" viewBox="0 0 1200 200" preserveAspectRatio="none" aria-hidden="true">
+  <path fill="#0a1120" d="M0 200V120h40v-30h30v50h25V80h50v60h20v-40h35v70h30V60h45v90h25v-50h40v60h30V90h50v70h25v-30h40v50h30V70h45v80h20v-40h50v70h30V100h40v50h25V80h50v80h30v-60h40v100z"/>
+  <g fill="#f6d78b" opacity=".55"><rect x="160" y="100" width="6" height="8"/><rect x="290" y="80" width="6" height="8"/><rect x="305" y="110" width="6" height="8"/><rect x="560" y="120" width="6" height="8"/><rect x="740" y="95" width="6" height="8"/><rect x="1030" y="110" width="6" height="8"/><rect x="420" y="130" width="6" height="8"/></g>
+</svg>
+
+<main id="stage">
+
+  <!-- 1. Envelope -->
+  <section class="scene" data-step="0" aria-label="Uma carta chegou">
+    <div class="env-wrap reveal">
+      <p class="kick">uma carta chegou pra vocês…</p>
+      <button class="env" id="openEnv" aria-label="Abrir a carta">
+        <span class="back"></span>
+        <span class="letter-in">Para vocês…</span>
+        <span class="front"><svg viewBox="0 0 420 271" preserveAspectRatio="none" aria-hidden="true"><path d="M0 271 L190 140 M420 271 L230 140" fill="none" stroke="rgba(60,50,80,.18)" stroke-width="2"/></svg></span>
+        <span class="flap"></span>
+        <span class="seal pulse">手</span>
+        <span class="to">Para: Lucas ART,<br>Pedro Alvez e Gabriel Rodrigues</span>
+      </button>
+      <p class="hint">toque no envelope para abrir</p>
+    </div>
+  </section>
+
+  <!-- 2. Aviso do convite -->
+  <section class="scene" data-step="1" aria-label="Aviso">
+    <div class="sheet reveal">
+      <span class="tape" aria-hidden="true"></span>
+      <p class="kick">antes de tudo…</p>
+      <h2>Isto não é só uma mensagem. É um convite.</h2>
+      <div class="names"><span>Lucas ART</span><span>Pedro Alvez</span><span>Gabriel Rodrigues</span></div>
+      <p class="hand">Eu cresci ouvindo vocês transformarem personagens em música. Hoje, como cantor geek também, quero fazer uma pergunta que guardo faz tempo.</p>
+      <p class="hand">Mas antes, deixa eu mostrar o que eu ando escrevendo.</p>
+    </div>
+  </section>
+
+  <!-- 3. O projeto -->
+  <section class="scene" data-step="2" aria-label="O projeto Cartas">
+    <div class="sheet reveal">
+      <span class="tape" aria-hidden="true"></span>
+      <p class="kick">o projeto</p>
+      <h2>CARTAS</h2>
+      <p>Cada música do <strong>Cartas</strong> nasce de um personagem que perdeu alguém, ou que viveu uma perda que mudou tudo.</p>
+      <p>O cantor compõe como se fosse esse personagem escrevendo uma carta para quem se foi: <em>tudo aquilo que ele nunca conseguiu dizer</em>.</p>
+      <p>E às vezes a carta não é de despedida. Às vezes o personagem só está passando por algo pesado e precisa desabafar com quem ele ama.</p>
+      <p class="hand">Não é sobre a luta, o poder ou a vitória. É sobre o que ficou guardado no peito.</p>
+    </div>
+  </section>
+
+  <!-- 4. Cartas enviadas -->
+  <section class="scene" data-step="3" aria-label="Cartas já enviadas">
+    <div class="reveal">
+      <p class="kick">cartas já enviadas</p>
+      <h2>Algumas cartas já chegaram ao destino</h2>
+      <p class="muted">Toque em uma carta para assistir aqui mesmo.</p>
+      <div class="letters" id="letters"></div>
+      
+    </div>
+  </section>
+
+  <!-- 5. Convite final -->
+  <section class="scene" data-step="4" aria-label="O convite">
+    <div class="sheet reveal">
+      <span class="tape" aria-hidden="true"></span>
+      <p class="kick">a próxima carta</p>
+      <h2>Querem escrever a próxima carta comigo?</h2>
+      <p class="hand">Lucas, Pedro e Gabriel: vocês deram voz a tantos personagens. Eu queria muito que vocês participassem desse projeto incrível. Acredito que seria muito bonito escrever, com vocês, esta décima carta, que é tão especial pra mim.</p>
+      <p class="hand">Seria uma honra ter vocês no Cartas.</p>
+      <p class="sign" id="signName"></p>
+      <div class="row" id="answerRow">
+        <button class="btn" id="accept">Aceitar o convite</button>
+        <button class="btn ghost" id="later">Vamos conversar</button>
+      </div>
+      <div class="reply" id="reply" role="status" aria-live="polite">
+        <div class="big" id="replyTitle"></div>
+        <p id="replyText" style="margin-inline:auto"></p>
+        <div class="contacts" id="contact"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="player" id="player" role="dialog" aria-modal="true" aria-label="Assistir a carta">
+  <div class="frame">
+    <div class="vid" id="vid"></div>
+    <div class="cap">
+      <div><b id="pTitle"></b> <small id="pFeat"></small></div>
+      <div><a id="pLink" href="#" target="_blank" rel="noopener">abrir no YouTube</a> <button class="x" id="pClose">fechar ✕</button></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+{
+/* ======== EDITE AQUI ======== */
+const ARTISTA = "VitchBeats";
+const CONTATOS = [
+  { tipo: "Instagram", texto: "@vitchbeats", link: "https://www.instagram.com/vitchbeats/" },
+  { tipo: "WhatsApp", texto: "(91) 98438-5735", link: "https://wa.me/5591984385735" },
+  { tipo: "E-mail", texto: "vitchbeats78@gmail.com", link: "" }
+];
+const CARTAS = [
+  { numero: 6, feat: "Avellarzin, Firee, TakaB e Anny", thumb: "img/carta6.jpg", link: "https://www.youtube.com/watch?v=Q9g89-Q9ieU" },
+  { numero: 8, feat: "Alice e JRP", thumb: "img/carta8.jpg", link: "https://www.youtube.com/watch?v=Ksf8FENKZ-k" },
+  { numero: 9, feat: "Felicia Rock, Basara e VMZ", thumb: "img/carta9.jpg", link: "https://www.youtube.com/watch?v=Z5fRyuffxIY" }
+];
+/* ============================ */
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+
+const ytId = u => (String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/) || [])[1] || "";
+$("letters").innerHTML = CARTAS.map((c, i) =>
+  `<a class="letter" href="${esc(c.link)}" data-i="${i}">
+     <span class="thumb"><img src="${esc(c.thumb)}" alt="Thumbnail da Carta ${esc(c.numero)}" loading="lazy"></span>
+     <span class="n">VitchBeats · Carta ${esc(c.numero)}</span>
+     <span class="who">Carta ${esc(c.numero)}</span>
+     <span class="from">feat. ${esc(c.feat)}</span>
+     <span class="play"><i></i>Assistir a carta</span>
+   </a>`).join("");
+$("signName").textContent = "— " + ARTISTA;
+$("contact").innerHTML = CONTATOS.map(c => c.link
+  ? `<a class="ct" href="${esc(c.link)}" target="_blank" rel="noopener"><b>${esc(c.tipo)}</b>${esc(c.texto)}</a>`
+  : `<span class="ct"><b>${esc(c.tipo)}</b>${esc(c.texto)}</span>`).join("");
+
+const scenes = [...document.querySelectorAll(".scene")];
+const TOTAL = scenes.length;
+const curlSvg = `<svg viewBox="0 0 42 42" aria-hidden="true"><path d="M4 4h22l12 12v22H4z" fill="currentColor" opacity=".12"/><path d="M4 4h22l12 12v22H4z" fill="none" stroke="currentColor" stroke-width="1.6"/><path class="curl" d="M26 4v12h12z" fill="currentColor" opacity=".55"/><path d="M12 24h12m-4-4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+scenes.forEach((sc, i) => {
+  if (i === 0) return;
+  const last = i === TOTAL - 1;
+  const f = document.createElement("div");
+  f.className = "turn";
+  f.innerHTML = `<button class="back" type="button">← voltar</button>
+    <span class="pg">página ${i + 1} de ${TOTAL}</span>
+    ${last ? "" : `<button class="go" type="button"><span>${i === TOTAL - 2 ? "abrir o convite" : "virar a página"}</span>${curlSvg}</button>`}`;
+  sc.querySelector(".reveal").appendChild(f);
+  f.querySelector(".back").addEventListener("click", () => prev());
+  if (!last) f.querySelector(".go").addEventListener("click", () => next());
+  if (last) f.style.justifyContent = "flex-start";
+});
+let cur = -1, timers = [], busy = false;
+const FLIP = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900;
+
+function writeIn(sc, delay) {
+  const kids = [...sc.querySelector(".reveal").children];
+  kids.forEach(k => k.classList.remove("in"));
+  kids.forEach((k, n) => timers.push(setTimeout(() => k.classList.add("in"), delay + n * 420)));
+}
+function show(i) {
+  if (i < 0 || i >= TOTAL || i === cur || busy) return;
+  timers.forEach(clearTimeout); timers = [];
+  const old = scenes[cur], nw = scenes[i], fwd = i > cur;
+  nw.classList.remove("first", "flip-in", "flip-out", "under", "sink");
+  nw.classList.add("on");
+  const M = FLIP ? 1 : 0, env = $("openEnv"), wrap = scenes[0].querySelector(".env-wrap");
+  if (!old) { nw.classList.add("first"); writeIn(nw, 250); }
+  else if (cur === 0 && i === 1) {            // abrir o envelope
+    busy = true; nw.classList.remove("on");
+    wrap.classList.add("opening"); env.classList.add("open");
+    timers.push(setTimeout(() => old.classList.add("env-leave"), 1400 * M));
+    timers.push(setTimeout(() => {
+      old.classList.remove("on", "env-leave", "first");
+      nw.classList.add("on", "first"); writeIn(nw, 250); busy = false;
+    }, 1900 * M + 10));
+  }
+  else if (cur === 1 && i === 0) {            // fechar o envelope
+    busy = true; nw.classList.remove("on");
+    old.classList.add("sheet-sink");
+    timers.push(setTimeout(() => {
+      old.classList.remove("on", "sheet-sink", "first");
+      env.classList.add("instant", "open"); wrap.classList.add("opening");
+      nw.querySelectorAll(".reveal>*").forEach(k => k.classList.add("in"));
+      nw.classList.add("on");
+      void env.offsetWidth; env.classList.remove("instant");
+      timers.push(setTimeout(() => { env.classList.remove("open"); }, 60 * M));
+      timers.push(setTimeout(() => { wrap.classList.remove("opening"); busy = false; }, 1500 * M + 70));
+    }, 500 * M + 10));
+  }
+  else {
+    busy = true;
+    if (fwd) { old.classList.add("flip-out"); nw.classList.add("under"); writeIn(nw, FLIP * .55); }
+    else { nw.classList.add("flip-in"); old.classList.add("sink"); nw.querySelectorAll(".reveal>*").forEach(k => k.classList.add("in")); }
+    setTimeout(() => {
+      old.classList.remove("on", "flip-out", "sink");
+      nw.classList.remove("under", "flip-in");
+      busy = false;
+    }, FLIP + 30);
+  }
+  cur = i;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+const next = () => show(cur + 1), prev = () => show(cur - 1);
+
+$("openEnv").addEventListener("click", e => { e.stopPropagation(); next(); });
+
+// clique em qualquer lugar da folha avança (menos em links e botões)
+$("stage").addEventListener("click", e => {
+  if (e.target.closest("a,button")) return;
+  if (cur > 0 && cur < scenes.length - 1) next();
+});
+function openPlayer(i) {
+  const c = CARTAS[i], id = ytId(c.link);
+  if (!id) { window.open(c.link, "_blank"); return; }
+  $("vid").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${esc(id)}?autoplay=1&rel=0" title="Carta ${esc(c.numero)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  $("pTitle").textContent = "Carta " + c.numero;
+  $("pFeat").textContent = "feat. " + c.feat;
+  $("pLink").href = c.link;
+  $("player").classList.add("on");
+  $("pClose").focus();
+}
+function closePlayer() { $("player").classList.remove("on"); $("vid").innerHTML = ""; }
+$("letters").addEventListener("click", e => {
+  const a = e.target.closest(".letter"); if (!a) return;
+  e.preventDefault(); openPlayer(+a.dataset.i);
+});
+$("pClose").addEventListener("click", closePlayer);
+$("player").addEventListener("click", e => { if (e.target.id === "player") closePlayer(); });
+document.addEventListener("keydown", e => {
+  if ($("player").classList.contains("on")) { if (e.key === "Escape") closePlayer(); return; }
+  if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
+  if (e.key === "ArrowLeft") prev();
+});
+
+function answer(yes) {
+  $("replyTitle").textContent = yes ? "Então a próxima carta é nossa." : "Vamos conversar, então.";
+  $("replyText").textContent = yes
+    ? "Obrigado por abrirem essa carta. Me chamem aqui pra gente escolher o personagem:"
+    : "Sem pressa. Me chamem aqui e eu explico tudo com calma:";
+  $("reply").classList.add("on");
+  if (yes) burst();
+}
+$("accept").addEventListener("click", () => answer(true));
+$("later").addEventListener("click", () => answer(false));
+
+/* ---- chuva e pétalas ---- */
+const cv = $("sky"), ctx = cv.getContext("2d");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let W, H, drops = [], petals = [];
+function size() {
+  const r = devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  cv.width = W * r; cv.height = H * r; ctx.setTransform(r, 0, 0, r, 0, 0);
+  const n = Math.round(W * H / 9000);
+  drops = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, l: 8 + Math.random() * 16, v: 6 + Math.random() * 8, a: .08 + Math.random() * .22 }));
+  petals = Array.from({ length: Math.max(8, Math.round(W / 90)) }, mkPetal);
+}
+function mkPetal(burstMode) {
+  return { x: burstMode ? W / 2 + (Math.random() - .5) * 200 : Math.random() * W, y: burstMode ? H * .55 : Math.random() * H - H,
+    s: 5 + Math.random() * 6, vx: burstMode ? (Math.random() - .5) * 6 : .3 + Math.random() * .8, vy: burstMode ? -3 - Math.random() * 5 : .6 + Math.random() * 1.1,
+    r: Math.random() * 6, vr: (Math.random() - .5) * .05, t: Math.random() * 100, b: !!burstMode };
+}
+function burst() { for (let i = 0; i < 70; i++) petals.push(mkPetal(true)); }
+function petal(p) {
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+  ctx.fillStyle = "rgba(244,169,189,.78)";
+  ctx.beginPath(); ctx.moveTo(0, -p.s); ctx.quadraticCurveTo(p.s, 0, 0, p.s); ctx.quadraticCurveTo(-p.s, 0, 0, -p.s); ctx.fill();
+  ctx.restore();
+}
+function frame() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.lineWidth = 1;
+  for (const d of drops) {
+    ctx.strokeStyle = `rgba(190,210,245,${d.a})`;
+    ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * .18, d.y + d.l); ctx.stroke();
+    d.y += d.v; d.x -= d.v * .18;
+    if (d.y > H) { d.y = -20; d.x = Math.random() * (W + 100); }
+  }
+  for (const p of petals) {
+    p.t += .02;
+    if (p.b) { p.vy += .08; p.vx *= .99; }
+    p.x += p.vx + Math.sin(p.t) * .4; p.y += p.vy; p.r += p.vr;
+    petal(p);
+  }
+  petals = petals.filter(p => !(p.b && p.y > H + 20));
+  for (const p of petals) if (!p.b && (p.y > H + 20 || p.x > W + 20)) Object.assign(p, mkPetal(), { y: -20 });
+  if (!still) requestAnimationFrame(frame);
+}
+const ro = new ResizeObserver(() => { size(); if (still) frame(); });
+ro.observe(document.body);
+size(); frame();
+show(0);
+}
+</script>
+</body>
+</html>
