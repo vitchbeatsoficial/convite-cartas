@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Painel da Carta 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@800&family=Caveat:wght@700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c1426;--paper:#f3ead8;--paper2:#e6d8bc;--ink:#2a2433;--seal:#b3324e;--sak:#f4a9bd}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;min-height:100vh;background:radial-gradient(120% 80% at 50% 110%,#2a3a63 0%,#16223d 35%,var(--bg) 75%) fixed;color:var(--ink);font:16px/1.55 "Zen Kaku Gothic New",system-ui,sans-serif;display:grid;place-items:start center;padding:40px 16px}
+.sheet{width:min(720px,100%);background:linear-gradient(175deg,var(--paper),var(--paper2));border-radius:6px;padding:clamp(24px,5vw,44px);box-shadow:0 40px 80px -30px rgba(0,0,0,.8)}
+.kick{font:700 22px "Caveat",cursive;color:var(--seal);margin:0}
+h1{font:800 clamp(30px,5vw,42px)/1.1 "Shippori Mincho",serif;margin:4px 0 6px;color:#1f1a2b}
+.muted{color:#6b6078;margin:0 0 22px}
+.cards{display:grid;gap:12px}
+.card{display:flex;align-items:center;gap:14px;background:#fffaf0;border-radius:12px;padding:14px 16px;box-shadow:0 8px 18px -12px rgba(0,0,0,.4);border-left:6px solid var(--c)}
+.card .nm{font-weight:700;font-size:18px;color:#1f1a2b;flex:1}
+.card .st{font-weight:700;padding:6px 14px;border-radius:999px;white-space:nowrap;font-size:15px}
+.st.ok{background:var(--c);color:#1f1a2b}
+.st.wait{background:#ece3d0;color:#7a6f88;font-weight:500}
+.sum{margin:22px 0 0;font:700 26px/1.2 "Caveat",cursive;color:var(--seal)}
+h2{font:800 22px "Shippori Mincho",serif;margin:28px 0 10px;color:#1f1a2b}
+.versos{display:flex;flex-wrap:wrap;gap:8px}
+.v{padding:8px 14px;border-radius:10px;font-weight:700;font-size:15px;background:#fffaf0;box-shadow:inset 0 0 0 2px var(--seal);color:var(--seal)}
+.v.taken{box-shadow:none;background:var(--c);color:#1f1a2b}
+.foot{margin-top:24px;font-size:14px;color:#7a6f88;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between}
+.err{color:var(--seal);font-weight:700}
+button{font:700 15px "Zen Kaku Gothic New",sans-serif;border:0;border-radius:999px;background:var(--ink);color:var(--paper);min-height:44px;padding:0 18px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--sak);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="sheet">
+  <p class="kick">só para o VitchBeats</p>
+  <h1>Painel da Carta 10</h1>
+  <p class="muted">Quem já escolheu o verso. A página se atualiza sozinha.</p>
+  <div class="cards" id="cards"></div>
+  <p class="sum" id="sum"></p>
+  <h2>Versos</h2>
+  <div class="versos" id="versos"></div>
+  <div class="foot"><span id="upd">carregando…</span><button type="button" id="ref">Atualizar agora</button></div>
+</main>
+<script>
+{
+const PESSOAS = { lucas: { nome: "Lucas ART", cor: "#f4a9bd" }, pedro: { nome: "Pedro Alvez", cor: "#9dbcf5" }, gabriel: { nome: "Gabriel Rodrigues", cor: "#f2cf7e" } };
+const VERSOS = [ { id: "verso-1", nome: "Verso 1", fixo: "VitchBeats" }, { id: "verso-2", nome: "Verso 2" }, { id: "verso-3", nome: "Verso 3" }, { id: "verso-4", nome: "Verso 4" } ];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = id => document.getElementById(id);
+async function carregar() {
+  try {
+    const r = await fetch("/api/escolhas", { cache: "no-store" });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.erro || "erro");
+    const esc0 = j.escolhas || {};
+    const porPessoa = {};
+    for (const [v, p] of Object.entries(esc0)) if (PESSOAS[p]) porPessoa[p] = v;
+    $("cards").innerHTML = Object.entries(PESSOAS).map(([k, p]) => {
+      const v = VERSOS.find(x => x.id === porPessoa[k]);
+      return `<div class="card" style="--c:${p.cor}"><span class="nm">${esc(p.nome)}</span>${v ? `<span class="st ok">escolheu o ${esc(v.nome)}</span>` : `<span class="st wait">ainda não escolheu</span>`}</div>`;
+    }).join("");
+    const n = Object.keys(porPessoa).length;
+    $("sum").textContent = n === 3 ? "Os três já escolheram!" : `${n} de 3 já escolheram`;
+    $("versos").innerHTML = VERSOS.map(v => {
+      const p = PESSOAS[esc0[v.id]];
+      if (v.fixo) return `<span class="v taken" style="--c:#e06a86">${esc(v.nome)} · ${esc(v.fixo)}</span>`;
+      return p ? `<span class="v taken" style="--c:${p.cor}">${esc(v.nome)} · ${esc(p.nome)}</span>` : `<span class="v">${esc(v.nome)} · livre</span>`;
+    }).join("");
+    $("upd").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    $("upd").className = "";
+  } catch (e) {
+    $("upd").textContent = "Não consegui ler as escolhas. O banco da Vercel já foi ligado?";
+    $("upd").className = "err";
+  }
+}
+$("ref").addEventListener("click", carregar);
+carregar();
+setInterval(() => { if (!document.hidden) carregar(); }, 10000);
+}
+</script>
+</body>
+</html>
