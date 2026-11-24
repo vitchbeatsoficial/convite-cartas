@@ -131,6 +131,37 @@ a.ct:hover{background:#3a3150}
 .player .cap a{color:var(--seal);font-weight:700;font-size:14px}
 .player .x{font:700 22px/1 "Caveat",cursive;color:var(--seal);background:none;border:0;cursor:pointer;min-height:44px;padding:0 8px}
 .player .x:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+/* beat + partes */
+.sub{font:800 22px/1.2 "Shippori Mincho",serif;color:#1f1a2b;margin:28px 0 12px}
+.beat{display:flex;gap:16px;align-items:center;background:#221c33;color:var(--paper);border-radius:14px;padding:16px 18px;margin-top:22px;box-shadow:0 14px 30px -14px rgba(0,0,0,.6)}
+.playb{flex:none;width:56px;height:56px;border-radius:50%;border:0;background:var(--sak);color:#2a1020;cursor:pointer;display:grid;place-items:center;transition:transform .2s}
+.playb:hover{transform:scale(1.06)}.playb:disabled{opacity:.4;cursor:default;transform:none}
+.playb:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.playb svg{width:26px;height:26px;fill:currentColor}
+.playb .i-pause,.beat.playing .playb .i-play{display:none}.beat.playing .playb .i-pause{display:inline}
+.bmain{flex:1}
+.btitle{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.btitle b{font:700 26px/1 "Caveat",cursive}.btitle span{font-size:13px;color:#b9aecb}
+.wave{display:flex;align-items:center;gap:2px;height:46px;margin:8px 0 4px;cursor:pointer;border-radius:6px}
+.wave:focus-visible{outline:2px solid var(--sak);outline-offset:3px}
+.wave i{flex:1;border-radius:2px;background:rgba(243,234,216,.25);transition:background .2s}
+.wave i.on{background:var(--sak)}
+.btime{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#b9aecb;font-variant-numeric:tabular-nums}
+#bMsg{text-align:center;flex:1}
+.tl{position:relative;height:46px;border-radius:10px;overflow:hidden;background:#e2d4b6;display:flex}
+.tl .seg{position:absolute;top:0;bottom:0;border:0;padding:0 8px;cursor:pointer;color:#1f1a2b;font:700 13px "Zen Kaku Gothic New",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid var(--paper);transition:filter .2s}
+.tl .seg:hover{filter:brightness(1.08)}.tl .seg:focus-visible{outline:2px solid #1f1a2b;outline-offset:-3px}
+.tl .ph{position:absolute;top:0;bottom:0;width:2px;background:#1f1a2b;left:0;z-index:2;pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.5)}
+.plist{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px}
+.plist li{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;background:rgba(42,36,51,.06)}
+.plist li.now{background:rgba(179,50,78,.12)}
+.plist .dot{width:14px;height:14px;border-radius:50%;flex:none}
+.plist .nm{font-weight:700;color:#1f1a2b;flex:1}
+.plist .tm{font-size:14px;color:#5a5068;font-variant-numeric:tabular-nums;white-space:nowrap}
+.plist button{border:0;background:none;color:var(--seal);font:700 14px "Zen Kaku Gothic New",sans-serif;cursor:pointer;min-height:44px;padding:0 6px}
+.plist button:focus-visible{outline:2px solid var(--seal)}
+.note.dark{color:#7a6f88}
+@media(max-width:600px){.beat{padding:14px}.playb{width:50px;height:50px}.tl .seg{font-size:11px;padding:0 4px}.plist .tm{font-size:13px}}
 /* virar página (dentro da carta) */
 .turn{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px dashed rgba(233,238,248,.18)}
 .sheet .turn{border-top-color:rgba(60,50,80,.22)}
@@ -262,13 +293,46 @@ a.ct:hover{background:#3a3150}
       <p class="sign" id="signName"></p>
       <div class="row" id="answerRow">
         <button class="btn" id="accept">Aceitar o convite</button>
-        <button class="btn ghost" id="later">Vamos conversar</button>
+        <button class="btn ghost" id="later">Não dessa vez</button>
       </div>
-      <div class="reply" id="reply" role="status" aria-live="polite">
-        <div class="big" id="replyTitle"></div>
-        <p id="replyText" style="margin-inline:auto"></p>
-        <div class="contacts" id="contact"></div>
+    </div>
+  </section>
+
+  <!-- 6a. Aceitou -->
+  <section class="scene branch" aria-label="Convite aceito">
+    <div class="sheet reveal">
+      <span class="tape" aria-hidden="true"></span>
+      <p class="kick">convite aceito</p>
+      <h2>Então a décima carta é nossa.</h2>
+      <p class="hand">Obrigado por aceitarem! Aqui está o beat completo e a parte de cada um. Fiquem à vontade para escolher o personagem sobre quem vocês querem cantar: essa carta também é de vocês.</p>
+      <div class="beat" id="beat">
+        <button class="playb" id="playB" type="button" aria-label="Tocar o beat"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-play" d="M8 5.5v13l11-6.5z"/><g class="i-pause"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></g></svg></button>
+        <div class="bmain">
+          <div class="btitle"><b id="bTitle"></b><span>beat completo</span></div>
+          <div class="wave" id="wave" role="slider" tabindex="0" aria-label="Posição do beat" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+          <div class="btime"><span id="tNow">0:00</span><span id="bMsg"></span><span id="tDur">0:00</span></div>
+        </div>
+        <audio id="aud" preload="metadata"></audio>
       </div>
+      <h3 class="sub">A parte de cada um</h3>
+      <div class="tl" id="tl"><span class="ph" id="ph"></span></div>
+      <ul class="plist" id="plist"></ul>
+      <p class="note dark" id="partsNote"></p>
+      <h3 class="sub">Falem comigo</h3>
+      <div class="contacts"></div>
+    </div>
+  </section>
+
+  <!-- 6b. Recusou -->
+  <section class="scene branch" aria-label="Obrigado">
+    <div class="sheet reveal">
+      <span class="tape" aria-hidden="true"></span>
+      <p class="kick">tudo bem</p>
+      <h2>Obrigado por terem lido até aqui.</h2>
+      <p class="hand">Sei como o tempo de vocês é corrido. Só de abrirem esta carta e conhecerem o Cartas, já significou muito pra mim.</p>
+      <p class="hand">Continuo admirando demais o trabalho de vocês. Quem sabe numa próxima carta.</p>
+      <p class="sign">— VitchBeats</p>
+      <div class="row"><button class="btn" id="sealIt" type="button">Fechar a carta</button></div>
     </div>
   </section>
 
@@ -294,6 +358,17 @@ const CONTATOS = [
   { tipo: "WhatsApp", texto: "(91) 98438-5735", link: "https://wa.me/5591984385735" },
   { tipo: "E-mail", texto: "vitchbeats78@gmail.com", link: "" }
 ];
+const BEAT = { titulo: "Carta 10", arquivo: "" };   // ex.: "audio/carta10.mp3"
+const PROVISORIO = true;
+const PARTES = [
+  { quem: "Intro",             inicio: "0:00", fim: "0:15" },
+  { quem: "VitchBeats",        inicio: "0:15", fim: "0:50" },
+  { quem: "Lucas ART",         inicio: "0:50", fim: "1:25" },
+  { quem: "Pedro Alvez",       inicio: "1:25", fim: "2:00" },
+  { quem: "Gabriel Rodrigues", inicio: "2:00", fim: "2:35" },
+  { quem: "VitchBeats",        inicio: "2:35", fim: "3:05", obs: "final" }
+];
+const CORES = { "Intro": "#cbbfa6", "VitchBeats": "#e06a86", "Lucas ART": "#f4a9bd", "Pedro Alvez": "#9dbcf5", "Gabriel Rodrigues": "#f2cf7e" };
 const CARTAS = [
   { numero: 6, feat: "Avellarzin, Firee, TakaB e Anny", thumb: "img/carta6.jpg", link: "https://www.youtube.com/watch?v=Q9g89-Q9ieU" },
   { numero: 8, feat: "Alice e JRP", thumb: "img/carta8.jpg", link: "https://www.youtube.com/watch?v=Ksf8FENKZ-k" },
@@ -314,15 +389,25 @@ $("letters").innerHTML = CARTAS.map((c, i) =>
      <span class="play"><i></i>Assistir a carta</span>
    </a>`).join("");
 $("signName").textContent = "— " + ARTISTA;
-$("contact").innerHTML = CONTATOS.map(c => c.link
+document.querySelectorAll(".contacts").forEach(el => el.innerHTML = CONTATOS.map(c => c.link
   ? `<a class="ct" href="${esc(c.link)}" target="_blank" rel="noopener"><b>${esc(c.tipo)}</b>${esc(c.texto)}</a>`
-  : `<span class="ct"><b>${esc(c.tipo)}</b>${esc(c.texto)}</span>`).join("");
+  : `<span class="ct"><b>${esc(c.tipo)}</b>${esc(c.texto)}</span>`).join(""));
 
 const scenes = [...document.querySelectorAll(".scene")];
-const TOTAL = scenes.length;
+const TOTAL = scenes.filter(sc => !sc.classList.contains("branch")).length;
+const ACEITE = TOTAL, RECUSA = TOTAL + 1;
 const curlSvg = `<svg viewBox="0 0 42 42" aria-hidden="true"><path d="M4 4h22l12 12v22H4z" fill="currentColor" opacity=".12"/><path d="M4 4h22l12 12v22H4z" fill="none" stroke="currentColor" stroke-width="1.6"/><path class="curl" d="M26 4v12h12z" fill="currentColor" opacity=".55"/><path d="M12 24h12m-4-4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 scenes.forEach((sc, i) => {
   if (i === 0) return;
+  if (i >= TOTAL) {
+    if (i === RECUSA) return;
+    const f = document.createElement("div");
+    f.className = "turn";
+    f.innerHTML = `<button class="back" type="button">← voltar ao convite</button>`;
+    sc.querySelector(".reveal").appendChild(f);
+    f.querySelector(".back").addEventListener("click", () => show(TOTAL - 1));
+    return;
+  }
   const last = i === TOTAL - 1;
   const f = document.createElement("div");
   f.className = "turn";
@@ -340,10 +425,11 @@ const FLIP = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900;
 function writeIn(sc, delay) {
   const kids = [...sc.querySelector(".reveal").children];
   kids.forEach(k => k.classList.remove("in"));
-  kids.forEach((k, n) => timers.push(setTimeout(() => k.classList.add("in"), delay + n * 420)));
+  const step = Math.min(420, 2600 / kids.length);
+  kids.forEach((k, n) => timers.push(setTimeout(() => k.classList.add("in"), delay + n * step)));
 }
 function show(i) {
-  if (i < 0 || i >= TOTAL || i === cur || busy) return;
+  if (i < 0 || i >= scenes.length || i === cur || busy) return;
   timers.forEach(clearTimeout); timers = [];
   const old = scenes[cur], nw = scenes[i], fwd = i > cur;
   nw.classList.remove("first", "flip-in", "flip-out", "under", "sink");
@@ -352,14 +438,14 @@ function show(i) {
   if (!old) { nw.classList.add("first"); writeIn(nw, 250); }
   else if (cur === 0 && i === 1) {            // abrir o envelope
     busy = true; nw.classList.remove("on");
-    wrap.classList.add("opening"); env.classList.add("open");
+    wrap.classList.add("opening"); env.classList.add("open"); setEnvText(false);
     timers.push(setTimeout(() => old.classList.add("env-leave"), 1400 * M));
     timers.push(setTimeout(() => {
       old.classList.remove("on", "env-leave", "first");
       nw.classList.add("on", "first"); writeIn(nw, 250); busy = false;
     }, 1900 * M + 10));
   }
-  else if (cur === 1 && i === 0) {            // fechar o envelope
+  else if (i === 0) {                         // fechar o envelope
     busy = true; nw.classList.remove("on");
     old.classList.add("sheet-sink");
     timers.push(setTimeout(() => {
@@ -385,7 +471,8 @@ function show(i) {
   cur = i;
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-const next = () => show(cur + 1), prev = () => show(cur - 1);
+const next = () => { if (cur < TOTAL - 1) show(cur + 1); };
+const prev = () => { if (cur >= TOTAL) show(TOTAL - 1); else show(cur - 1); };
 
 $("openEnv").addEventListener("click", e => { e.stopPropagation(); next(); });
 
@@ -417,16 +504,59 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowLeft") prev();
 });
 
-function answer(yes) {
-  $("replyTitle").textContent = yes ? "Então a próxima carta é nossa." : "Vamos conversar, então.";
-  $("replyText").textContent = yes
-    ? "Obrigado por abrirem essa carta. Me chamem aqui pra gente escolher o personagem:"
-    : "Sem pressa. Me chamem aqui e eu explico tudo com calma:";
-  $("reply").classList.add("on");
-  if (yes) burst();
+const ENV_TO = document.querySelector(".env .to").innerHTML, ENV_HINT = document.querySelector(".env-wrap .hint").textContent;
+function setEnvText(thanks) {
+  document.querySelector(".env .to").innerHTML = thanks ? "De: VitchBeats,<br>com carinho" : ENV_TO;
+  document.querySelector(".env-wrap .hint").textContent = thanks ? "obrigado pelo seu tempo" : ENV_HINT;
+  document.querySelector(".env-wrap .kick").textContent = thanks ? "a carta foi guardada…" : "uma carta chegou pra vocês…";
 }
-$("accept").addEventListener("click", () => answer(true));
-$("later").addEventListener("click", () => answer(false));
+$("accept").addEventListener("click", () => { show(ACEITE); setTimeout(burst, 700); });
+$("later").addEventListener("click", () => show(RECUSA));
+$("sealIt").addEventListener("click", () => { setEnvText(true); show(0); });
+
+/* ---- beat e partes ---- */
+const toS = t => { const [m, ss] = String(t).split(":").map(Number); return m * 60 + (ss || 0); };
+const fmt = x => { x = Math.max(0, Math.floor(x || 0)); return Math.floor(x / 60) + ":" + String(x % 60).padStart(2, "0"); };
+const aud = $("aud"), wave = $("wave");
+let dur = toS(PARTES[PARTES.length - 1].fim);
+$("bTitle").textContent = BEAT.titulo;
+const NB = 64; let seed = 7;
+const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+wave.innerHTML = Array.from({ length: NB }, (_, k) => `<i style="height:${Math.round(22 + 78 * Math.abs(Math.sin(k / 4.2)) * (.45 + rnd() * .55))}%"></i>`).join("");
+const bars = [...wave.children];
+function drawParts() {
+  $("tl").innerHTML = '<span class="ph" id="ph"></span>' + PARTES.map((p, k) => {
+    const a = toS(p.inicio), b = toS(p.fim);
+    return `<button class="seg" type="button" data-k="${k}" style="left:${a / dur * 100}%;width:${(b - a) / dur * 100}%;background:${esc(cor(p.quem))}" title="${esc(p.quem)} · ${esc(p.inicio)}–${esc(p.fim)}">${esc(p.quem)}</button>`;
+  }).join("");
+  $("plist").innerHTML = PARTES.map((p, k) =>
+    `<li data-k="${k}"><span class="dot" style="background:${esc(cor(p.quem))}"></span><span class="nm">${esc(p.quem)}${p.obs ? ` <small style="font-weight:400;color:#7a6f88">· ${esc(p.obs)}</small>` : ""}</span><span class="tm">${esc(p.inicio)} – ${esc(p.fim)}</span><button type="button" data-k="${k}">ouvir</button></li>`).join("");
+}
+function cor(q) { return CORES[q] || "#cbbfa6"; }
+drawParts();
+$("tDur").textContent = fmt(dur);
+$("partsNote").textContent = PROVISORIO ? "Tempos de exemplo: vou trocar pelos tempos reais da música." : "";
+if (!BEAT.arquivo) { $("playB").disabled = true; $("bMsg").textContent = "o beat chega em breve"; }
+else aud.src = BEAT.arquivo;
+aud.addEventListener("loadedmetadata", () => { if (isFinite(aud.duration)) { dur = aud.duration; $("tDur").textContent = fmt(dur); drawParts(); paint(); } });
+aud.addEventListener("error", () => { if (BEAT.arquivo) { $("playB").disabled = true; $("bMsg").textContent = "não consegui carregar o beat"; } });
+function paint() {
+  const t = aud.currentTime || 0, r = dur ? t / dur : 0;
+  bars.forEach((b, k) => b.classList.toggle("on", k / NB < r));
+  const ph = $("ph"); if (ph) ph.style.left = (r * 100) + "%";
+  $("tNow").textContent = fmt(t);
+  wave.setAttribute("aria-valuenow", Math.round(r * 100));
+  [...$("plist").children].forEach((li, k) => li.classList.toggle("now", t >= toS(PARTES[k].inicio) && t < toS(PARTES[k].fim) && !aud.paused));
+}
+aud.addEventListener("timeupdate", paint);
+aud.addEventListener("play", () => $("beat").classList.add("playing"));
+aud.addEventListener("pause", () => { $("beat").classList.remove("playing"); paint(); });
+$("playB").addEventListener("click", () => { if (aud.paused) aud.play().catch(() => { $("bMsg").textContent = "toque de novo para tocar"; }); else aud.pause(); });
+function seek(sec, play) { if (!BEAT.arquivo) return; aud.currentTime = Math.min(sec, dur - .1); paint(); if (play) aud.play().catch(() => {}); }
+wave.addEventListener("click", e => { const r = wave.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * dur, false); });
+wave.addEventListener("keydown", e => { if (e.key === "ArrowRight") { e.stopPropagation(); seek(aud.currentTime + 5); } if (e.key === "ArrowLeft") { e.stopPropagation(); seek(aud.currentTime - 5); } });
+$("tl").addEventListener("click", e => { const b = e.target.closest(".seg"); if (b) seek(toS(PARTES[+b.dataset.k].inicio), true); });
+$("plist").addEventListener("click", e => { const b = e.target.closest("button"); if (b) seek(toS(PARTES[+b.dataset.k].inicio), true); });
 
 /* ---- chuva e pétalas ---- */
 const cv = $("sky"), ctx = cv.getContext("2d");
