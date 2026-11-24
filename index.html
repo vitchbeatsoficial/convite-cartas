@@ -756,6 +756,11 @@ async function carregar() {
       marcarResposta(minha.resposta);
       if (cur === 0 && !busy) show(alvoResposta());
     }
+    else if (MEU && !minha && RESPOSTA) {          // respostas zeradas no painel: esquece aqui também
+      RESPOSTA = null;
+      try { localStorage.removeItem(CHAVE); } catch (e) {}
+      $("atalhos").hidden = true; document.body.classList.remove("respondeu");
+    }
   } catch (e) { syncOK = false; }
   drawParts(); paint();
 }
