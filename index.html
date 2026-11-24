@@ -211,6 +211,18 @@ body.solo .row[data-only=solo]{display:flex!important}
 .plist .unpick{color:#7a6f88}
 .pick-msg{min-height:1.5em;font-size:15px!important;font-weight:700;color:var(--seal)!important;margin:10px 0 0}
 @media(max-width:600px){.plist li{flex-wrap:wrap}.plist .nm{flex:1 1 60%}.plist .acts{margin-left:auto}}
+/* atalhos depois de responder */
+.atalhos{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:8;display:flex;gap:4px;padding:5px;border-radius:999px;background:rgba(12,20,38,.78);backdrop-filter:blur(8px);box-shadow:0 10px 30px -10px rgba(0,0,0,.7);max-width:calc(100% - 20px);overflow-x:auto;scrollbar-width:none;animation:fadeIn .5s both}
+.atalhos::-webkit-scrollbar{display:none}
+.atalhos[hidden]{display:none}
+.atalhos button{flex:none;border:0;background:none;color:#c9d3ea;font:500 14px "Zen Kaku Gothic New",sans-serif;min-height:38px;padding:0 13px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.atalhos button:hover{background:rgba(255,255,255,.08);color:#fff}
+.atalhos button.on{background:var(--paper);color:#2a2433;font-weight:700}
+.atalhos button.resp{color:var(--sak);font-weight:700}
+.atalhos button.resp.on{background:var(--sak);color:#2a1020}
+.atalhos button:focus-visible{outline:2px solid var(--sak);outline-offset:1px}
+body.respondeu main{padding-top:72px}
+@keyframes fadeIn{from{opacity:0}}
 /* virar página (dentro da carta) */
 .turn{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;padding-top:14px;border-top:1px dashed rgba(233,238,248,.18)}
 .sheet .turn{border-top-color:rgba(60,50,80,.22)}
@@ -416,6 +428,8 @@ body.solo .row[data-only=solo]{display:flex!important}
 
 </main>
 
+<nav class="atalhos" id="atalhos" aria-label="Atalhos do convite" hidden></nav>
+
 <div class="player" id="player" role="dialog" aria-modal="true" aria-label="Assistir a carta">
   <div class="frame">
     <div class="vid" id="vid"></div>
@@ -572,6 +586,7 @@ function show(i) {
     }, FLIP + 30);
   }
   cur = i;
+  if (typeof marcarAtalho === "function" && !$("atalhos").hidden) marcarAtalho();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 const next = () => { if (cur < TOTAL - 1) show(cur + 1); };
@@ -617,8 +632,35 @@ function avisar(acao) {
   if (!MEU) return;
   try { fetch(API, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pessoa: MEU, acao }) }).catch(() => {}); } catch (e) {}
 }
-$("accept").addEventListener("click", () => { avisar("aceitar"); show(ACEITE); setTimeout(burst, 700); carregar(); });
-$("later").addEventListener("click", () => { avisar("recusar"); show(RECUSA); });
+$("accept").addEventListener("click", () => { avisar("aceitar"); marcarResposta("aceitou"); show(ACEITE); setTimeout(burst, 700); carregar(); });
+$("later").addEventListener("click", () => { avisar("recusar"); marcarResposta("recusou"); show(RECUSA); });
+
+/* ---- atalhos depois de responder ---- */
+const CHAVE = "cartas10:" + (EU ? EU.primeiro.toLowerCase() : "grupo");
+let RESPOSTA = null;
+try { RESPOSTA = localStorage.getItem(CHAVE); } catch (e) {}
+const alvoResposta = () => RESPOSTA === "recusou" ? RECUSA : ACEITE;
+function montarAtalhos() {
+  if (!RESPOSTA) return;
+  const itens = [[1, "Início"], [2, "O projeto"], [3, "As cartas"], [TOTAL - 2, "O prazo"], [TOTAL - 1, "O convite"], [alvoResposta(), RESPOSTA === "recusou" ? "Minha resposta" : "Beat e versos"]];
+  $("atalhos").innerHTML = itens.map(([i, t], n) => `<button type="button" data-i="${i}"${n === itens.length - 1 ? ' class="resp"' : ""}>${t}</button>`).join("");
+  $("atalhos").hidden = false;
+  document.body.classList.add("respondeu");
+  marcarAtalho();
+}
+function marcarAtalho() {
+  [...$("atalhos").children].forEach(b => {
+    const on = +b.dataset.i === cur;
+    b.classList.toggle("on", on);
+    if (on) b.scrollIntoView({ block: "nearest", inline: "nearest" });
+  });
+}
+function marcarResposta(r) {
+  RESPOSTA = r;
+  try { localStorage.setItem(CHAVE, r); } catch (e) {}
+  montarAtalhos();
+}
+$("atalhos").addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(+b.dataset.i); });
 $("sealIt").addEventListener("click", () => { setEnvText(true); show(0); });
 
 /* ---- prazo ---- */
@@ -707,7 +749,13 @@ async function carregar() {
   try {
     const r = await fetch(API, { cache: "no-store" });
     if (!r.ok) throw 0;
-    ESC = limpa((await r.json()).escolhas); syncOK = true;
+    const dados = await r.json();
+    ESC = limpa(dados.escolhas); syncOK = true;
+    const minha = MEU && dados.respostas && dados.respostas[MEU];
+    if (minha && (minha.resposta === "aceitou" || minha.resposta === "recusou") && minha.resposta !== RESPOSTA) {
+      marcarResposta(minha.resposta);
+      if (cur === 0 && !busy) show(alvoResposta());
+    }
   } catch (e) { syncOK = false; }
   drawParts(); paint();
 }
@@ -799,7 +847,7 @@ function frame() {
 const ro = new ResizeObserver(() => { size(); if (still) frame(); });
 ro.observe(document.body);
 size(); frame();
-show(0);
+if (RESPOSTA) { montarAtalhos(); show(alvoResposta()); } else show(0);
 }
 </script>
 </body>
