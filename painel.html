@@ -56,7 +56,7 @@ button:focus-visible{outline:3px solid var(--sak);outline-offset:2px}
 <script>
 {
 const PESSOAS = { lucas: { nome: "Lucas ART", cor: "#f4a9bd" }, pedro: { nome: "Pedro Alvez", cor: "#9dbcf5" }, gabriel: { nome: "Gabriel Rodrigues", cor: "#f2cf7e" } };
-const VERSOS = [ { id: "verso-1", nome: "Verso 1", fixo: "VitchBeats" }, { id: "verso-2", nome: "Verso 2" }, { id: "verso-3", nome: "Verso 3" }, { id: "verso-4", nome: "Verso 4" } ];
+const VERSOS = [ { id: "verso-1", nome: "Verso 1" }, { id: "verso-2", nome: "Verso 2" }, { id: "verso-3", nome: "Verso 3" }, { id: "verso-4", nome: "Verso 4" } ];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = id => document.getElementById(id);
 async function carregar() {

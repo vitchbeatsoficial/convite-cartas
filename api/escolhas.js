@@ -4,7 +4,7 @@ const KEY = "carta10:escolhas";
 const RESP = "carta10:respostas";   // pessoa -> "aceitou|data" ou "recusou|data"
 const PESSOAS = ["lucas", "pedro", "gabriel"];
 const VERSO = /^verso-\d{1,2}$/;
-const FIXOS = ["verso-1"]; // versos que já têm dono (VitchBeats) e não podem ser escolhidos
+const FIXOS = []; // versos que já têm dono e não podem ser escolhidos (nenhum por enquanto)
 
 async function redis(cmd) {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
