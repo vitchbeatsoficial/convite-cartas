@@ -423,7 +423,7 @@ const CONTATOS = [
   { tipo: "WhatsApp", texto: "(91) 98438-5735", link: "https://wa.me/5591984385735" },
   { tipo: "E-mail", texto: "vitchbeats78@gmail.com", link: "" }
 ];
-const BEAT = { titulo: "Carta 10", arquivo: "" };   // ex.: "audio/carta10.mp3"
+const BEAT = { titulo: "Carta 10", arquivo: "audio/beat-exemplo.mp3" };   // ex.: "audio/carta10.mp3"
 const PROVISORIO = true;
 // tipo "verso" = pode ser escolhido · "fixa" = intro, refrão, ponte (não entram na escolha)
 // fixo: "vitch" = verso que já é do VitchBeats
@@ -658,7 +658,7 @@ function drawParts() {
   }
 }
 $("tDur").textContent = fmt(dur);
-$("partsNote").textContent = PROVISORIO ? "Tempos e partes de exemplo: vou trocar pelos tempos reais da música." : "";
+$("partsNote").textContent = PROVISORIO ? "Beat, tempos e partes de exemplo: vou trocar pelo beat real da Carta 10." : "";
 if (!BEAT.arquivo) { $("playB").disabled = true; $("bMsg").textContent = "o beat chega em breve"; }
 else aud.src = BEAT.arquivo;
 aud.addEventListener("loadedmetadata", () => { if (isFinite(aud.duration)) { dur = aud.duration; $("tDur").textContent = fmt(dur); drawParts(); paint(); } });
