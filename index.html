@@ -131,6 +131,17 @@ a.ct:hover{background:#3a3150}
 .player .cap a{color:var(--seal);font-weight:700;font-size:14px}
 .player .x{font:700 22px/1 "Caveat",cursive;color:var(--seal);background:none;border:0;cursor:pointer;min-height:44px;padding:0 8px}
 .player .x:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+/* modo individual */
+[data-only=solo]{display:none!important}
+body.solo [data-only=solo]{display:revert!important}
+body.solo .row[data-only=solo]{display:flex!important}
+.btn.wa{display:inline-flex;align-items:center;text-decoration:none;background:#2a2433;color:var(--paper);box-shadow:none}
+.btn.wa:hover{background:#3a3150}
+.btn.ghost.dk{display:inline-flex;align-items:center;text-decoration:none;color:#2a2433;border-color:rgba(42,36,51,.3)}
+.btn.ghost.dk:hover{background:rgba(42,36,51,.06)}
+.tl .seg.dim{filter:saturate(.3) opacity(.45)}
+.tl .seg.mine{box-shadow:inset 0 0 0 3px #1f1a2b}
+.plist li.mine{background:rgba(244,169,189,.28);box-shadow:inset 3px 0 0 var(--seal)}
 /* prazo */
 .prazo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px;margin:14px 0 18px;position:relative}
 .pz{display:flex;align-items:center;gap:14px;background:#fffaf0;border:1px solid rgba(60,50,80,.15);border-radius:12px;padding:12px 14px;box-shadow:0 8px 18px -12px rgba(0,0,0,.4)}
@@ -242,7 +253,7 @@ a.ct:hover{background:#3a3150}
   <!-- 1. Envelope -->
   <section class="scene" data-step="0" aria-label="Uma carta chegou">
     <div class="env-wrap reveal">
-      <p class="kick">uma carta chegou pra vocês…</p>
+      <p class="kick" data-solo="uma carta chegou pra você…">uma carta chegou pra vocês…</p>
       <button class="env" id="openEnv" aria-label="Abrir a carta">
         <span class="back"></span>
         <span class="letter-in">Para vocês…</span>
@@ -262,7 +273,7 @@ a.ct:hover{background:#3a3150}
       <p class="kick">antes de tudo…</p>
       <h2>Isto não é só uma mensagem. É um convite.</h2>
       <div class="names"><span>Lucas ART</span><span>Pedro Alvez</span><span>Gabriel Rodrigues</span></div>
-      <p class="hand">Eu cresci ouvindo vocês transformarem personagens em música. Hoje, como cantor geek também, quero fazer uma pergunta que guardo faz tempo.</p>
+      <p class="hand" data-solo="Eu cresci ouvindo você transformar personagens em música. Hoje, como cantor geek também, quero te fazer uma pergunta que guardo faz tempo.">Eu cresci ouvindo vocês transformarem personagens em música. Hoje, como cantor geek também, quero fazer uma pergunta que guardo faz tempo.</p>
       <p class="hand">Mas antes, deixa eu mostrar o que eu ando escrevendo.</p>
     </div>
   </section>
@@ -297,7 +308,7 @@ a.ct:hover{background:#3a3150}
       <span class="tape" aria-hidden="true"></span>
       <p class="kick">antes de decidir</p>
       <h2>O prazo</h2>
-      <p class="hand">Sei que a agenda de vocês é cheia, então já deixo as datas combinadas:</p>
+      <p class="hand" data-solo="Sei que a sua agenda é cheia, então já deixo as datas combinadas:">Sei que a agenda de vocês é cheia, então já deixo as datas combinadas:</p>
       <div class="prazo">
         <div class="pz"><span class="pd"><b>15</b><span>jan 2027</span></span><span class="pt"><strong>Entrega das vozes</strong><small class="faltam"></small></span></div>
         <div class="pz launch"><span class="pd"><b>06</b><span>fev 2027</span></span><span class="pt"><strong>Lançamento da Carta 10</strong><small>a carta chega ao destino</small></span></div>
@@ -311,9 +322,10 @@ a.ct:hover{background:#3a3150}
     <div class="sheet reveal">
       <span class="tape" aria-hidden="true"></span>
       <p class="kick">a próxima carta</p>
-      <h2>Querem escrever a próxima carta comigo?</h2>
-      <p class="hand">Lucas, Pedro e Gabriel: vocês deram voz a tantos personagens. Eu queria muito que vocês participassem desse projeto incrível. Acredito que seria muito bonito escrever, com vocês, esta décima carta, que é tão especial pra mim.</p>
-      <p class="hand">Seria uma honra ter vocês no Cartas.</p>
+      <h2 data-solo="Quer escrever a próxima carta comigo?">Querem escrever a próxima carta comigo?</h2>
+      <p class="hand" data-solo="{primeiro}: você deu voz a tantos personagens. Eu queria muito que você participasse desse projeto incrível. Acredito que seria muito bonito escrever, com você, esta décima carta, que é tão especial pra mim.">Lucas, Pedro e Gabriel: vocês deram voz a tantos personagens. Eu queria muito que vocês participassem desse projeto incrível. Acredito que seria muito bonito escrever, com vocês, esta décima carta, que é tão especial pra mim.</p>
+      <p class="hand" data-solo="Seria uma honra ter você no Cartas.">Seria uma honra ter vocês no Cartas.</p>
+      <p class="hand" data-only="solo" data-solo="Esse convite também foi para {outros}, mas cada um decide por si, no seu tempo e sem pressão."></p>
       <p class="sign" id="signName"></p>
       <div class="row" id="answerRow">
         <button class="btn" id="accept">Aceitar o convite</button>
@@ -327,8 +339,8 @@ a.ct:hover{background:#3a3150}
     <div class="sheet reveal">
       <span class="tape" aria-hidden="true"></span>
       <p class="kick">convite aceito</p>
-      <h2>Então a décima carta é nossa.</h2>
-      <p class="hand">Obrigado por aceitarem! Aqui está o beat completo e a parte de cada um. Fiquem à vontade para escolher o personagem sobre quem vocês querem cantar: essa carta também é de vocês.</p>
+      <h2 data-solo="Então a décima carta também é sua.">Então a décima carta é nossa.</h2>
+      <p class="hand" data-solo="Obrigado por aceitar, {primeiro}! Aqui está o beat completo e a parte de cada um, com a sua em destaque. Fique à vontade para escolher o personagem sobre quem você quer cantar: essa carta também é sua.">Obrigado por aceitarem! Aqui está o beat completo e a parte de cada um. Fiquem à vontade para escolher o personagem sobre quem vocês querem cantar: essa carta também é de vocês.</p>
       <h3 class="sub">O prazo</h3>
       <div class="prazo">
         <div class="pz"><span class="pd"><b>15</b><span>jan 2027</span></span><span class="pt"><strong>Entrega das vozes</strong><small class="faltam"></small></span></div>
@@ -349,7 +361,8 @@ a.ct:hover{background:#3a3150}
       <div class="tl" id="tl"><span class="ph" id="ph"></span></div>
       <ul class="plist" id="plist"></ul>
       <p class="note dark" id="partsNote"></p>
-      <h3 class="sub">Falem comigo</h3>
+      <h3 class="sub" data-solo="Fala comigo">Falem comigo</h3>
+      <div class="row" data-only="solo" style="margin-top:0;margin-bottom:12px"><a class="btn wa" id="waYes" target="_blank" rel="noopener">Avisar o Vitch que aceitei</a></div>
       <div class="contacts"></div>
     </div>
   </section>
@@ -359,11 +372,11 @@ a.ct:hover{background:#3a3150}
     <div class="sheet reveal">
       <span class="tape" aria-hidden="true"></span>
       <p class="kick">tudo bem</p>
-      <h2>Obrigado por terem lido até aqui.</h2>
-      <p class="hand">Sei como o tempo de vocês é corrido. Só de abrirem esta carta e conhecerem o Cartas, já significou muito pra mim.</p>
-      <p class="hand">Continuo admirando demais o trabalho de vocês. Quem sabe numa próxima carta.</p>
+      <h2 data-solo="Obrigado por ter lido até aqui.">Obrigado por terem lido até aqui.</h2>
+      <p class="hand" data-solo="Sei como o seu tempo é corrido, {primeiro}. Só de você abrir esta carta e conhecer o Cartas, já significou muito pra mim.">Sei como o tempo de vocês é corrido. Só de abrirem esta carta e conhecerem o Cartas, já significou muito pra mim.</p>
+      <p class="hand" data-solo="Continuo admirando demais o seu trabalho. Quem sabe numa próxima carta.">Continuo admirando demais o trabalho de vocês. Quem sabe numa próxima carta.</p>
       <p class="sign">— VitchBeats</p>
-      <div class="row"><button class="btn" id="sealIt" type="button">Fechar a carta</button></div>
+      <div class="row"><a class="btn ghost dk" id="waNo" data-only="solo" target="_blank" rel="noopener">Avisar o Vitch</a><button class="btn" id="sealIt" type="button">Fechar a carta</button></div>
     </div>
   </section>
 
@@ -407,8 +420,29 @@ const CARTAS = [
 ];
 /* ============================ */
 
+const PESSOAS = {
+  lucas:   { nome: "Lucas ART",         primeiro: "Lucas" },
+  pedro:   { nome: "Pedro Alvez",       primeiro: "Pedro" },
+  gabriel: { nome: "Gabriel Rodrigues", primeiro: "Gabriel" }
+};
+const WHATS = "5591984385735";
+const EU = PESSOAS[(location.hash || "").slice(1).toLowerCase()] || null;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = id => document.getElementById(id);
+if (EU) {
+  document.body.classList.add("solo");
+  const outros = Object.values(PESSOAS).filter(p => p !== EU).map(p => p.nome).join(" e ");
+  document.querySelectorAll("[data-solo]").forEach(el => {
+    el.textContent = el.dataset.solo.replaceAll("{primeiro}", EU.primeiro).replaceAll("{nome}", EU.nome).replaceAll("{outros}", outros);
+  });
+  document.querySelector(".env .to").textContent = "Para: " + EU.nome;
+  document.querySelector(".names").innerHTML = `<span>${esc(EU.nome)}</span>`;
+  document.title = "Uma carta para " + EU.primeiro;
+  const wa = t => `https://wa.me/${WHATS}?text=${encodeURIComponent(t)}`;
+  $("waYes").href = wa(`Oi Vitch! Aceito o convite para a Carta 10 do projeto Cartas. — ${EU.nome}`);
+  $("waNo").href = wa(`Oi Vitch! Li o convite da Carta 10, obrigado pelo carinho. Dessa vez não vou conseguir participar. — ${EU.nome}`);
+}
+const KICK0 = document.querySelector(".env-wrap .kick").textContent;
 
 const ytId = u => (String(u).match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/) || [])[1] || "";
 $("letters").innerHTML = CARTAS.map((c, i) =>
@@ -539,7 +573,7 @@ const ENV_TO = document.querySelector(".env .to").innerHTML, ENV_HINT = document
 function setEnvText(thanks) {
   document.querySelector(".env .to").innerHTML = thanks ? "De: VitchBeats,<br>com carinho" : ENV_TO;
   document.querySelector(".env-wrap .hint").textContent = thanks ? "obrigado pelo seu tempo" : ENV_HINT;
-  document.querySelector(".env-wrap .kick").textContent = thanks ? "a carta foi guardada…" : "uma carta chegou pra vocês…";
+  document.querySelector(".env-wrap .kick").textContent = thanks ? "a carta foi guardada…" : KICK0;
 }
 $("accept").addEventListener("click", () => { show(ACEITE); setTimeout(burst, 700); });
 $("later").addEventListener("click", () => show(RECUSA));
@@ -565,10 +599,11 @@ const bars = [...wave.children];
 function drawParts() {
   $("tl").innerHTML = '<span class="ph" id="ph"></span>' + PARTES.map((p, k) => {
     const a = toS(p.inicio), b = toS(p.fim);
-    return `<button class="seg" type="button" data-k="${k}" style="left:${a / dur * 100}%;width:${(b - a) / dur * 100}%;background:${esc(cor(p.quem))}" title="${esc(p.quem)} · ${esc(p.inicio)}–${esc(p.fim)}">${esc(p.quem)}</button>`;
+    const mc = EU ? (p.quem === EU.nome ? " mine" : " dim") : "";
+    return `<button class="seg${mc}" type="button" data-k="${k}" style="left:${a / dur * 100}%;width:${(b - a) / dur * 100}%;background:${esc(cor(p.quem))}" title="${esc(p.quem)} · ${esc(p.inicio)}–${esc(p.fim)}">${esc(p.quem)}</button>`;
   }).join("");
   $("plist").innerHTML = PARTES.map((p, k) =>
-    `<li data-k="${k}"><span class="dot" style="background:${esc(cor(p.quem))}"></span><span class="nm">${esc(p.quem)}${p.obs ? ` <small style="font-weight:400;color:#7a6f88">· ${esc(p.obs)}</small>` : ""}</span><span class="tm">${esc(p.inicio)} – ${esc(p.fim)}</span><button type="button" data-k="${k}">ouvir</button></li>`).join("");
+    `<li data-k="${k}"${EU && p.quem === EU.nome ? ' class="mine"' : ""}><span class="dot" style="background:${esc(cor(p.quem))}"></span><span class="nm">${esc(p.quem)}${p.obs ? ` <small style="font-weight:400;color:#7a6f88">· ${esc(p.obs)}</small>` : ""}</span><span class="tm">${esc(p.inicio)} – ${esc(p.fim)}</span><button type="button" data-k="${k}">ouvir</button></li>`).join("");
 }
 function cor(q) { return CORES[q] || "#cbbfa6"; }
 drawParts();
